@@ -1,0 +1,130 @@
+---
+title: "607_W1_Assignment Mushrooms Dataset"
+author: "Matheesha Thambeliyagodage"
+date: "February 6, 2017"
+output: html_document
+---
+Note : Below solution explains how to read and manipulate data in different ways
+
+```{r}
+#install.packages("RCurl")
+library(RCurl)
+```
+![](https://archive.ics.uci.edu/ml/assets/MLimages/Large73.jpg)
+
+Load Mushroom Data Set from UCI repository into an R data frame.
+```{r}
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.data"
+#Create Data set from the Data in URL
+mushroom_dataSet <-getURL(url)
+#mushroom_dataSet
+```
+create a data table using the data in URL
+```{r}
+mushrooms_tbl <- read.table(file = url, header = FALSE, sep = ",")
+head(mushrooms_tbl)
+```
+Write Mushroom Data Set to a local folder
+```{R}
+write.csv(mushroom_dataSet, "E:/0_MSC/github/MATS_DATA607_/W1/Mushroom.csv", row.names=FALSE)
+```
+Read above created file into a Data Frame
+```{r}
+mushroome_df <- read.csv(text=mushroom_dataSet,header=F,sep=",", stringsAsFactors = FALSE)
+head(mushroome_df)
+#head(mushroom_data)
+```
+Analysing Mushroom Data model
+```{r}
+dim(mushroome_df)
+names(mushroome_df)
+```
+Create a data with extracted columns for analysis (selected columns only)
+Three data frames are created since there are column break
+```{r}
+stgMushRoom1 <- mushrooms_tbl[,1:4]
+stgMushRoom2 <- mushrooms_tbl[,6]
+stgMushRoom3 <- mushrooms_tbl[,23]
+```
+The 3 frames are combined into one data frame
+```{r}
+stgMushRoom <- cbind(stgMushRoom1, stgMushRoom2,stgMushRoom3)
+head(stgMushRoom)
+```
+Adding Column Names
+```{r}
+#column names are added
+colnames(stgMushRoom) <- c("EdiblePoisonous","CapShape","CapSurface","CapColor","Odor","GrowsIn")
+head(stgMushRoom)
+```
+Replacing Abrivation values with proper values
+1..EdiblePoisonous
+```{r}
+#EdiblePoisonous
+#Need to add the levels for every variable
+levels(stgMushRoom$`EdiblePoisonous`) <- c(levels(stgMushRoom$`EdiblePoisonous`), c("Edible","Poisonous"))
+stgMushRoom$`EdiblePoisonous`[stgMushRoom$`EdiblePoisonous` == "e"] <- "Edible"
+stgMushRoom$`EdiblePoisonous`[stgMushRoom$`EdiblePoisonous` == "p"] <- "Poisonous"
+```
+2..CapShape
+```{r}
+#CapShape
+levels(stgMushRoom$`CapShape`) <- c(levels(stgMushRoom$`CapShape`), c("Bell","Conical","Convex","Flat","Knobbed","Sunken"))
+stgMushRoom$`CapShape`[stgMushRoom$`CapShape` == "b"] <- "Bell"
+stgMushRoom$`CapShape`[stgMushRoom$`CapShape` == "c"] <- "Conical"
+stgMushRoom$`CapShape`[stgMushRoom$`CapShape` == "x"] <- "Convex"
+stgMushRoom$`CapShape`[stgMushRoom$`CapShape` == "f"] <- "Flat"
+stgMushRoom$`CapShape`[stgMushRoom$`CapShape` == "k"] <- "Knobbed"
+stgMushRoom$`CapShape`[stgMushRoom$`CapShape` == "s"] <- "Sunken"
+```
+3..CapSurface
+```{r}
+#CapSurface
+levels(stgMushRoom$`CapSurface`) <- c(levels(stgMushRoom$`CapSurface`), c("Fibrous", "Grooves", "Scaly", "Smooth"))
+stgMushRoom$`CapSurface`[stgMushRoom$`CapSurface` == "f"] <- "Fibrous"
+stgMushRoom$`CapSurface`[stgMushRoom$`CapSurface` == "g"] <- "Grooves"
+stgMushRoom$`CapSurface`[stgMushRoom$`CapSurface` == "y"] <- "Scaly"
+stgMushRoom$`CapSurface`[stgMushRoom$`CapSurface` == "s"] <- "Smooth"
+`````
+4..Odor
+```{r}
+#Odor
+levels(stgMushRoom$Odor) <- c(levels(stgMushRoom$Odor), c("Almond", "Anise", "Creosote", "Fishy", "Foul", "Musty", "None", "Pungent", "Spicy"))
+stgMushRoom$Odor[stgMushRoom$Odor == "a"] <- "Almond"
+stgMushRoom$Odor[stgMushRoom$Odor == "l"] <- "Anise"
+stgMushRoom$Odor[stgMushRoom$Odor == "c"] <- "Creosote"
+stgMushRoom$Odor[stgMushRoom$Odor == "y"] <- "Fishy"
+stgMushRoom$Odor[stgMushRoom$Odor == "f"] <- "Foul"
+stgMushRoom$Odor[stgMushRoom$Odor == "m"] <- "Musty"
+stgMushRoom$Odor[stgMushRoom$Odor == "n"] <- "None"
+stgMushRoom$Odor[stgMushRoom$Odor == "p"] <- "Pungent"
+stgMushRoom$Odor[stgMushRoom$Odor == "s"] <- "Spicy"
+``````
+5..CapColor
+```{r}
+levels(stgMushRoom$`CapColor`) <- c(levels(stgMushRoom$`CapColor`), c("Brown", "Buff", "Cinnamon", "Gray", "Green", "Pink", "Purple", "Red", "White", "Yellow"))
+stgMushRoom$`CapColor`[stgMushRoom$`CapColor` == "n"] <- "Brown"
+stgMushRoom$`CapColor`[stgMushRoom$`CapColor` == "b"] <- "Buff"
+stgMushRoom$`CapColor`[stgMushRoom$`CapColor` == "c"] <- "Cinnamon"
+stgMushRoom$`CapColor`[stgMushRoom$`CapColor` == "g"] <- "Gray"
+stgMushRoom$`CapColor`[stgMushRoom$`CapColor` == "r"] <- "Green"
+stgMushRoom$`CapColor`[stgMushRoom$`CapColor` == "p"] <- "Pink"
+stgMushRoom$`CapColor`[stgMushRoom$`CapColor` == "u"] <- "Purple"
+stgMushRoom$`CapColor`[stgMushRoom$`CapColor` == "e"] <- "Red"
+stgMushRoom$`CapColor`[stgMushRoom$`CapColor` == "w"] <- "White"
+stgMushRoom$`CapColor`[stgMushRoom$`CapColor` == "y"] <- "Yellow"
+````
+6..GrowsIn
+```{r}
+levels(stgMushRoom$`GrowsIn`) <- c(levels(stgMushRoom$`GrowsIn`), c("grasses", "leaves", "meadows", "paths", "urban", "waste", "woods"))
+stgMushRoom$`GrowsIn`[stgMushRoom$`GrowsIn` == "g"] <- "grasses"
+stgMushRoom$`GrowsIn`[stgMushRoom$`GrowsIn` == "l"] <- "leaves"
+stgMushRoom$`GrowsIn`[stgMushRoom$`GrowsIn` == "m"] <- "meadows"
+stgMushRoom$`GrowsIn`[stgMushRoom$`GrowsIn` == "p"] <- "paths"
+stgMushRoom$`GrowsIn`[stgMushRoom$`GrowsIn` == "u"] <- "urban"
+stgMushRoom$`GrowsIn`[stgMushRoom$`GrowsIn` == "w"] <- "waste"
+stgMushRoom$`GrowsIn`[stgMushRoom$`GrowsIn` == "d"] <- "woods"
+
+write.csv(stgMushRoom, "E:/0_MSC/github/MATS_DATA607_/W1/stgMushRoom.csv")
+head(stgMushRoom)
+````
