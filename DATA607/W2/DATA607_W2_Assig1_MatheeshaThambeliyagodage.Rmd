@@ -1,0 +1,189 @@
+---
+title: "DATA607_W2_Assig1_MatheeshaThambeliyagodage"
+author: "Matheesha Thambeliyagodage"
+date: "February 12, 2017"
+output: html_document
+---
+```{r}
+#install.packages("RMySQL")
+library(RMySQL)
+#install.packages("sqldf")
+library(sqldf)
+#install.packages("DT")
+library("DT")
+#install.packages("knitr")
+library("knitr")
+#install.packages("reshape2")
+library("reshape2")
+#install.packages("tidyr")
+library("tidyr")
+```
+
+```{r}
+library(RMySQL)
+mydb1 = dbConnect(MySQL(), user='root', password='root', dbname='movies', host='localhost')
+```
+--Seting up the Connection to MySql Database...... 
+```{r}
+# creating a database using RMySQL in R
+# dbSendQuery(mydb, "CREATE DATABASE movies_new;")
+# dbSendQuery(mydb, "USE movies_new")
+
+# reconnecting to database we just created 
+
+mydb = dbConnect(MySQL(), user='root', password='root', host='localhost', dbname="movies_new")
+```
+
+
+```{r}
+#Drop Table if exists
+
+dbSendQuery(mydb, "drop table if exists movies_master")
+# Create new table
+
+dbSendQuery(mydb, "CREATE TABLE `movies_master` (
+  `MovieID` int(11) NOT NULL,
+  `Name` varchar(100) DEFAULT NULL,
+  `Description` varchar(2000) DEFAULT NULL,
+  `Year` int(11) DEFAULT NULL,
+  `Genere` varchar(450) DEFAULT NULL,
+  `Directors` varchar(1000) DEFAULT NULL,
+  `Producer` varchar(1000) DEFAULT NULL,
+  PRIMARY KEY (`MovieID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;")
+```
+
+
+```{r}
+movies_master_df <- read.csv2("E:/0_MSC/Modules/607- Data Acquisition and Management/Asignments/W2/movies_master.csv", header=FALSE)
+movies_master_df
+
+#movies_master_df <- read.csv2("https://github.com/mathsanu/CUNY_MSDA/blob/master/DATA607/W2/movies_mas#ter.csv", header=FALSE)
+#movies_master_df
+
+```
+
+```{r}
+#Inserting Data into table [movies_master]
+dbWriteTable(mydb, "movies_masterf",movies_master_df,append=TRUE ) 
+```
+```{r}
+movies_master_rs = dbSendQuery(mydb1, "SELECT * FROM movies_master")
+movies_master_df = fetch(movies_master_rs, n=-1)
+print(movies_master_df)
+```
+#Drop Table if exists
+```{r}
+dbSendQuery(mydb, "drop table if exists rating_master")
+
+# Create new table
+
+dbSendQuery(mydb, "CREATE TABLE `rating_master` (
+  `Rating_ID` int(11) NOT NULL,
+  `Rating_Name` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`Rating_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;")
+
+
+```
+Inserting Data into table [rating_master]
+```{r}
+rating_master_df <- read.csv2("E:/0_MSC/Modules/607- Data Acquisition and Management/Asignments/W2/rating_master.csv", header=FALSE)
+rating_master_df
+
+#rating_master_df <- read.csv2("https://github.com/mathsanu/CUNY_MSDA/blob/master/DATA607/W2/rating_master.csv", header=FALSE)
+#rating_master_df
+
+```
+```{r}
+#Inserting Data rating_master
+dbWriteTable(mydb, "raating_master",rating_master_df,append=TRUE ) 
+```
+
+```{r}
+rating_master_rs = dbSendQuery(mydb1, "SELECT * FROM rating_master")
+rating_master_df = fetch(rating_master_rs, n=-1)
+print(rating_master_df)
+```
+```{r}
+#Drop Table if exists
+
+dbSendQuery(mydb, "drop table if exists cineast_master")
+
+# Create new table
+
+dbSendQuery(mydb, "CREATE TABLE `cineast_master` (
+  `Ceneast_ID` int(11) NOT NULL,
+  `Name` varchar(45) DEFAULT NULL,
+  `Year_of_Birth` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Ceneast_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;")
+
+```
+
+Reading from .csv
+```{r}
+cineast_master_df <- read.csv2("E:/0_MSC/Modules/607- Data Acquisition and Management/Asignments/W2/cineast_master.csv", header=FALSE)
+cineast_master_df
+
+#cineast_master_df <- read.csv2("https://github.com/mathsanu/CUNY_MSDA/blob/master/DATA607/W2/cineast_master.csv", header=FALSE)
+#cineast_master_df
+
+```
+
+```{r}
+#Inserting Data to cineast_master
+dbWriteTable(mydb, "cineast_mastar",cineast_master_df,append=TRUE ) 
+```
+#Display Data
+```{r}
+rating_master_rs = dbSendQuery(mydb1, "SELECT * FROM cineast_master")
+rating_master_df = fetch(rating_master_rs, n=-1)
+print(rating_master_df)
+```
+#Drop Table if exists
+```{r}
+dbSendQuery(mydb, "drop table if exists movie_ratings")
+
+# Create new table
+
+dbSendQuery(mydb, "CREATE TABLE `movie_ratings` (
+  `RecID` int(11) NOT NULL,
+  `Movie_ID` int(11) DEFAULT NULL,
+  `Rating_ID` int(11) DEFAULT NULL,
+  `Cineast_ID` int(11) DEFAULT NULL,
+  `Date_Added` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`RecID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;")
+
+```
+#Reading from .csv
+```{r}
+movie_ratings_df <- read.csv2("E:/0_MSC/Modules/607- Data Acquisition and Management/Asignments/W2/movie_ratings.csv", header=FALSE)
+movie_ratings_df
+
+#movie_ratings_df <- read.csv2("https://github.com/mathsanu/CUNY_MSDA/blob/master/DATA607/W2/movie_ratings.csv", header=FALSE)
+#movie_ratings_df
+```
+#Inserting Data to cineast_master
+```{r}
+dbWriteTable(mydb, "movie_retings",movie_ratings_df,append=TRUE ) 
+```
+#Display Data
+```{r}
+movie_ratings_rs = dbSendQuery(mydb1, "SELECT * FROM movie_ratings")
+movie_ratings_df = fetch(movie_ratings_rs, n=-1)
+print(movie_ratings_df)
+```
+-- Final results of the survey
+```{r}
+final_rs = dbSendQuery(mydb1, "SELECT c.Name,c.Year,b.Ceneast_ID,b.Name,b.Year_of_Birth,d.Rating_Name FROM movie_ratings  A 
+                       join cineast_master B on B.Ceneast_ID= A.Cineast_ID 
+                        JOIN movies_master c on c.MovieID = Movie_ID
+                        join rating_master D on D.Rating_ID = A.Rating_ID
+")
+final_df = fetch(final_rs, n=-1)
+print(final_df)
+
+```
+
