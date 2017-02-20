@@ -1,0 +1,126 @@
+---
+title: "DATA607_W3_Assig1_MatheeshaThambeliyagodage"
+author: "Matheesha Thambeliyagodage"
+date: "February 18, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Chapter 8,  Regular Expressions in R 
+#### Chapter 8, Problem 3 - Copy the introductory example. The vector name stores the extracted names.
+
+```{r}
+library(stringr)
+raw.data <- "555-1239Moe Szyslak(636) 555-0113Burns, C. Montgomery555-6542Rev. Timothy Lovejoy555 8904Ned Flanders636-555-3226Simpson, Homer5553642Dr. Julius Hibbert"
+# extract names only.
+name <- unlist(str_extract_all(raw.data, "[[:alpha:]., ]{2,}"))  
+name
+```
+
+#### (a) Use the tools of this chapter to rearrange the vector so that all elements conform to the standard first_name last_name.
+```{r}
+# remove initials
+name2 <- sub(" [A-z]{1}\\. "," ",name)  
+name2
+```
+
+```{r}
+#switch last,first to first last 
+
+name3 <- sub("(\\w+),\\s(\\w+)","\\2 \\1", name2) 
+name3
+```
+#### (b) Construct a logical vector indicating whether a character has a title (i.e., Rev. and Dr.).
+```{r}
+# remove titles
+name4 <- sub("[A-z]{2,3}\\. ","",name3)  
+name4
+```
+#### (Extra Test) Create data frame with the associated phone numbers
+```{r}
+phone <- unlist(str_extract_all(raw.data, "\\(?(\\d{3})?\\)?(-| )?\\d{3}(-| )?\\d{4}"))
+#phone
+#data.frame(name = name, phone = phone)
+df<- data.frame(name = name, phone = phone)
+df
+```
+#### Chapter 8, Problem 4 - Describe the types of strings that conform to the following regular expressions and construct an example that is matched by the regular expression.
+
+
+#### (a) [0-9]+\\$
+```{r}
+#Description: One or More numbers followed by $ symbol.
+pattern="[0-9]+\\$"
+examples=c("1234$","ab12$ab","a$e","fg45fff$ee")
+str_detect(examples,pattern)
+
+```
+
+#### (b) \\b[a-z]{1,4}\\b 
+```{r}
+pattern="\\b[a-z]{1,4}\\b"
+#A word of 1 to 4 letters
+examples=c("a","bc","xyz","wxyz","123 abcd 12c", "67yyy456","fgsd1234 xyz")
+str_detect(examples,pattern)
+
+```
+
+####  (c) .*?\\.txt$
+```{r}
+pattern=".*?\\.txt$"
+#String pattern ending with .txt (ie. .txt followed by end of line or new line)
+examples=c(".1txt","abc.txt","123abc.txt","a$b#1.txt" , "alfa.txt end")
+str_detect(examples,pattern)
+```
+
+#### (d) \\d{2}/\\d{2}/\\d{4}
+
+```{r}
+pattern = "\\d{2}/\\d{2}/\\d{4}"
+#Numbers in the format nn/nn/nnnn match to mm/dd/yyyy or dd/mm/yyyy
+examples=c("92/36/1234","01/01/2017 Happy newyear!","!! 12/31/2016 !!", "05-11-2017")
+str_detect(examples,pattern)
+```
+
+####  (e) <(.+?)>.+?</\\1>
+
+```{r}
+pattern="<(.+?)>.+?</\\1>"
+#Tag format. One or more character inside < > followed by one or more character and followed by  the same characters that was inside < > earlier, but this time inside </ >. Similar to <html> something </html>
+examples=c("<tag>Text</tag>",
+           "<Font size=4,color=blue>Blue Text</Font size=4,color=blue>",
+           "<hr><p>Learnign R<h1>")
+str_detect(examples,pattern)
+```
+
+#### (Extra Test)  (5) Rewrite the expression [0-9]+\\$ in a way that all elements are altered but the expression performs the same task
+
+
+```{r}
+#Answer: \\d+[$]
+pattern1="[0-9]+\\$"
+pattern2="\\d+[$]"
+example=c("1$","123$","a1$a","1234$","ab12$ab","sde$33","fg45fff$ee")
+str_detect(example,pattern1)
+str_detect(example,pattern2)
+```
+#### Chapter 8, Problem 9
+
+*  The following code hides a secret message. Crack it with R and regular expressions. Hint: Some of the characters are more revealing than others! The code snippet is also available in the materials at www.r-datacollection.com.
+
+    clcopCow1zmstc0d87wnkig7OvdicpNuggvhryn92Gjuwczi8hqrfpRxs5Aj5dwpn0Tanwo
+    Uwisdij7Lj8kpf03AT5Idr3coc0bt7yczjatOaootj55t3Nj3ne6c4Sfek.r1w1YwwojigO
+    d6vrfUrbz2.2bkAnbhzgv4R9i05zEcrop.wAgnb.SqoU65fPa1otfb7wEm24k6t3sR9zqe5
+    fy89n6Nd5t9kc4fE905gmc4Rgxo5nhDk!gr ii
+
+```{r}
+secret <- paste("clcopCow1zmstc0d87wnkig7OvdicpNuggvhryn92Gjuwczi8hqrfpRxs5Aj5dwpn0Tanwo",
+                "Uwisdij7Lj8kpf03AT5Idr3coc0bt7yczjatOaootj55t3Nj3ne6c4Sfek.r1w1YwwojigO",
+                "d6vrfUrbz2.2bkAnbhzgv4R9i05zEcrop.wAgnb.SqoU65fPa1otfb7wEm24k6t3sR9zqe5",
+                "fy89n6Nd5t9kc4fE905gmc4Rgxo5nhDk!gr")
+message <- unlist(str_extract_all(secret, "[[:upper:].]{1,}"))
+message <- str_replace_all(paste(message, collapse = ''), "[.]", " "); message
+```
