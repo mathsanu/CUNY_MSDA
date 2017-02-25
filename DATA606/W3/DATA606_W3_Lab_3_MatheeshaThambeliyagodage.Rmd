@@ -1,0 +1,128 @@
+---
+title: "DATA606_W3_Lab_3_MatheeshaThambeliyagodage"
+author: "Matheesha Thambeliyagodage"
+date: "February 23, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+myTheme <- theme(axis.ticks=element_blank(),  
+                  panel.border = element_rect(color="gray", fill=NA), 
+                  panel.background=element_rect(fill="#FBFBFB"), 
+                  panel.grid.major.y=element_line(color="white", size=0.5), 
+                  panel.grid.major.x=element_line(color="white", size=0.5))
+```
+
+```{r}
+# Direct download 
+download.file("http://www.openintro.org/stat/data/bdims.RData", destfile = "bdims.RData")
+load("bdims.RData")
+#head(bdims)
+
+```
+#### Create two additional data sets: one with only men and another with only women.
+```{r}
+mdims <- subset(bdims, sex == 1)
+fdims <- subset(bdims, sex == 0)
+```
+#### Make a histogram of men's heights and a histogram of women's heights. How would you compare the various aspects of the two distributions?
+
+```{r}
+hist(mdims$hgt, xlab = "Male Height", main = "", xlim = c(140, 190), ylim = c(0, 80));
+
+hist(fdims$hgt, xlab = "Female Height", main = "", xlim = c(140, 190), ylim = c(0, 80));
+# They both have a normal distribution, but the male mean's height is greater than that of female.
+```
+
+#### The normal distribution
+
+```{r}
+fhgtmean <- mean(fdims$hgt)
+fhgtsd   <- sd(fdims$hgt)
+```
+
+```{r}
+hist(fdims$hgt, probability = TRUE)
+x <- 140:190
+y <- dnorm(x = x, mean = fhgtmean, sd = fhgtsd)
+lines(x = x, y = y, col = "blue")
+```
+
+#### Evaluating the normal distribution
+
+```{r}
+qqnorm(fdims$hgt)
+qqline(fdims$hgt)
+```
+
+```{r}
+sim_norm <- rnorm(n = length(fdims$hgt), mean = fhgtmean, sd = fhgtsd)
+head(sim_norm)
+```
+```{r}
+qqnorm(sim_norm)
+qqline(sim_norm)
+```
+
+```{r}
+qqnormsim(fdims$hgt)
+```
+
+```{r}
+qqnorm(fdims$wgt)
+qqline(fdims$wgt)
+```
+#### Normal probabilities
+
+```{r}
+1 - pnorm(q = 182, mean = fhgtmean, sd = fhgtsd)
+```
+
+```{r}
+sum(fdims$hgt > 182) / length(fdims$hgt)
+```
+#### What is the probability that a randomly chosen young adult female is 6 feet (about 182 cm)?
+
+```{r}
+pnorm(q = 182, mean = fhgtmean, sd = fhgtsd);
+```
+## On Your Own
+
+### Question 1
+
+1  Now let's consider some of the other variables in the body dimensions data set. Using the figures linked here, match the histogram to its normal probability plot. All of the variables have been standardized (first subtract the mean, then divide by the standard deviation), so the units won't be of any help. While unnecessary for this assignment, if you are uncertain based on these figures, generate the plots in R to check.
+
+* 1 The histogram for female biiliac (pelvic) diameter (bii.di) belongs to normal probability plot letter____ **A**.
+* 2 The histogram for female elbow diameter (elb.di) belongs to normal probability plot letter ____**C**.
+* 3 The histogram for general age (age) belongs to normal probability plot letter ____**D**.
+* 4 The histogram for female chest depth (che.de) belongs to normal probability plot letter ____**A**
+    
+2  Note that normal probability plots C and D have a slight stepwise pattern.
+Why do you think this is the case?   
+
+#### Ans - The stepwise pattern could be due to the regular discrete values of the sample.
+
+3 As you can see, normal probability plots can be used both to assess normality and visualize skewness. Make a normal probability plot for female knee diameter (kne.di). Based on this normal probability plot, is this variable left skewed, symmetric, or right skewed? Use a histogram to confirm your findings.   
+
+```
+
+```{r}
+#normal probability plot of knee diameters
+qqnorm(fdims$kne.di)
+qqline(fdims$kne.di)
+```
+
+#### Ans -  Based on these plots the data appears to be right skewed. We can check this with a histogram
+
+
+```{r}
+#Females  Histogram of height
+hist(mdims$kne.di)
+```
+
+
+
+
+
