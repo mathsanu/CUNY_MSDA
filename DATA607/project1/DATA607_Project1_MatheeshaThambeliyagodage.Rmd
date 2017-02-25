@@ -1,0 +1,280 @@
+---
+title: "DATA607_Project1_MatheeshaThambeliyagodage"
+author: "Matheesha Thambeliyagodage"
+date: "February 22, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+library(stringr)
+library(sqldf)
+library(datasets)
+#install.packages('DT')
+library(DT)
+```
+
+<style>
+.midcenter {
+    position: fixed;
+    top: 55%;
+    left: 70%;
+}
+</style>
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<style>
+ul.a {
+    list-style-type: circle;
+}
+
+ul.b {
+    list-style-type: square;
+}
+
+ol.c {
+    list-style-type: upper-roman;
+}
+
+ol.d {
+    list-style-type: lower-alpha;
+}
+img {
+    float: right;
+    margin: 0 0 5px 5px;
+
+}
+</style>
+
+<p><img src="chess.png" alt="W3Schools.com" width="300" height="140" > </p>
+<div class="h3"> <span style="color: #9c640c">Project summary</span>  </div>
+
+<p>
+In this project, a text (**tournamentinfo.txt**) file was given with chess tournament results where the information has some structure.
+</p>
+<p> Below is an example of the chess tournament table structure. It is a .txt file with **PIPE** Delimited  character </p>
+
+<p>
+```{r message=FALSE, warning=FALSE,echo=FALSE}
+url <- "https://raw.githubusercontent.com/kfolsom98/DATA607/master/tournamentinfo.txt"
+#url <- "https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA607/project1/tournamentinfo.txt"
+download_file <- "tournamentinfo.txt" # name of the file on the local machine after download
+# the file will be downloaded to the working directory
+downloader::download(url, download_file)
+# read the file into a vector
+conn <- file(download_file, open="r")
+tournament <- readLines(conn, warn = FALSE)
+#tournament
+tournament[1:13]
+close(conn)
+```
+</p>
+
+My bellow process create a R Markdown file that generates a .CSV file which could for example be imported into a SQL database, with the following information for all of the players: (**Total # of Players are - 64** )
+</p>
+<p>
+<ul class="b">
+  <li>Player's Name</li>
+  <li>Player's State</li>
+  <li>Player's Pre-Rating</li>
+  <li>Total Number of Points</li>
+  <li>Average Pre Chess Rating of Opponents</li>
+</ul>
+</p>
+<p>
+For the first player, the information would be:
+</p>
+
+
+```{r  message=FALSE, warning=FALSE,echo=FALSE,results = 'asis'}
+library(RCurl)
+url <- "https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA607/project1/chess_data1.txt"
+#Create Data set from the Data in URL
+chess_dataSet <-getURL(url)
+#mushroom_dataSet
+chess_tbl <- read.table(file = url, header = FALSE, sep = ",")
+#head(mushrooms_tbl)
+my_data <- head(chess_tbl )
+names(my_data) <- c(letters[1:ncol(chess_tbl)])
+library("knitr")
+kable(my_data)
+```
+
+<p>
+1605 was calculated by using the pre-tournament opponents' ratings of 1436, 1563, 1600, 1610, 1649, 1663, 1716, and dividing by the total number of games played.
+</p>
+<p>
+The chess rating system (invented by a Minnesota statistician named Arpad Elo) has been used in many other contexts, including assessing relative strength of employment candidates by human resource departments.
+</p>
+
+#### {#stp0}
+
+<div class="h3"> <span style="color: #9c640c">Project Steps</span>  </div>
+
+
+
+<p> [~ Connect and load the tournamentinfo.txt](#stp1) </p>
+<p> [~ Analysis of the data structure](#stp2) </p>
+<p> [~ Stage and Separate data rows using Regular Expression](#stp3) </p>
+<p> [~ Extract Data rows using Regular Expression](#stp4) </p>
+<p> [~ Calculate Mean Ratings](#stp5) </p>
+<p> [~ Combine Data Frames](#stp6) </p>
+<p> [~ Export Selected Columns to a .csv Output File ](#stp7) </p>
+
+
+####  {#stp1}
+<div class="h4"> <span style="color: #0000FF">Connect and load the tournamentinfo.txt </span>  </div> 
+
+```{r }
+url <- "https://raw.githubusercontent.com/kfolsom98/DATA607/master/tournamentinfo.txt"
+#url <- "https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA607/project1/tournamentinfo.txt"
+download_file <- "tournamentinfo.txt" # name of the file on the local machine after download
+# the file will be downloaded to the working directory
+downloader::download(url, download_file)
+# read the file into a vector
+conn <- file(download_file, open="r")
+tournamentinfo <- readLines(conn, warn = FALSE)
+#tournamentinfo
+#tournamentinfo[1:13]
+close(conn)
+```
+
+<p> [Back to the Menu~~~~~~~~~~~~~~~ ](#stp0) </p>
+
+# {#stp2}
+<div class="h4"> <span style="color: #0000FF">Analysis of the data structure</span>  </div> 
+```{r}
+length(tournamentinfo)
+```
+
+```{r}
+head(tournamentinfo)
+```
+
+<p> [Back to the Menu~~~~~~~~~~~~~~~ ](#stp0) </p>
+
+####  {#stp3}
+<div class="h4"> <span style="color: #0000FF">Stage and Separate data rows using Regular Expression</span>  </div> 
+
+As seen above, we have to remove the header i.e row 1 to row 4.Without removing header and subsequent code will retrieve Player Info and Rating Info.
+
+```{r}
+# Remove lines with "-" 
+toinfo.stg <- str_replace_all(str_replace_all(tournamentinfo, "->", ">>"), "-{3,}", "")
+toinfo.stg <- tournamentinfo[toinfo.stg  != ""]
+toinfo.stg<- toinfo.stg[-(1:2)]
+
+
+# determine the format by looking at the contents of the first field in the record
+
+toinfo.players <- toinfo.stg[str_detect(str_sub(toinfo.stg, 1, 6), "[0-9]")]
+toinfo.ratings <- toinfo.stg[str_detect(str_sub(toinfo.stg, 1, 6), "[A-Z]{2,2}")]
+
+```
+
+```{r}
+head(toinfo.players, 5)
+```
+```{r}
+head(toinfo.ratings, 5)
+```
+
+<p> [Back to the Menu~~~~~~~~~~~~~~~ ](#stp0) </p>
+
+####  {#stp4}
+<div class="h4"> <span style="color: #0000FF">Extract Data rows using Regular Expression</span>  </div> 
+
+```{r}
+pairNo <- as.integer(str_extract(toinfo.players, "\\d+"))
+Name <- str_trim(str_extract(toinfo.players, "(\\w+\\s){2,3}"))
+Region <- str_extract(toinfo.ratings, "\\w+")
+Points <- as.numeric(str_extract(toinfo.players, "\\d+\\.\\d+"))
+Rating <- as.integer(str_extract(str_extract(toinfo.ratings, "[^\\d]\\d{3,4}[^\\d]"), "\\d+"))
+Opponents <- str_extract_all(str_extract_all(toinfo.players, "\\d+\\|"), "\\d+")
+Won <- str_count(toinfo.players, "\\Q|W  \\E")
+Loose <- str_count(toinfo.players, "\\Q|L  \\E")
+Draw <- str_count(toinfo.players, "\\Q|D  \\E")
+
+```
+```{r}
+# # of  of Players 
+length(toinfo.players)
+
+```
+```{r}
+# # of  of ratings 
+length(toinfo.ratings)
+```
+<p> [Back to the Menu~~~~~~~~~~~~~~~ ](#stp0) </p>
+
+####  {#stp5}
+<div class="h4"> <span style="color: #0000FF">Calculate Mean Ratings</span>  </div> 
+
+```{r}
+mRating <- length(toinfo.players)
+for (i in 1:length(toinfo.players)) { 
+  mRating[i] <- round(mean(Rating[as.numeric(unlist(Opponents[pairNo[i]]))]), digits = 0) 
+}
+opData <- data.frame(Name, Region, Points, Rating, mRating, Won, Loose, Draw);
+head(opData)
+```
+<p> [Back to the Menu~~~~~~~~~~~~~~~ ](#stp0) </p>
+
+####  {#stp6}
+<div class="h4"> <span style="color: #0000FF">Combine Data Frames </span>  </div> 
+
+```{r}
+# Display All the Pivoted Columns in a Table
+
+colnames(opData) <- c("Player's Name", "Player's State", "Total Number of Points", "Player's Pre-Rating", " Average Pre Chess Rating of Opponents", "Won", "Lost", "Draw")
+datatable(opData)
+```
+
+<p> [Back to the Menu~~~~~~~~~~~~~~~ ](#stp0) </p>
+
+####  {#stp7}
+<div class="h4"> <span style="color: #0000FF">Export Selected Columns to a .csv Output File</span>  </div> 
+
+```{r}
+# Select only the specified columns to export
+
+Final.df <- data.frame(Name , Region, Points, Rating, mRating);
+colnames(Final.df ) <- c("Player's Name", "Player's State", "Total Number of Points", "Player's Pre-Rating", " Average Pre Chess Rating of Opponents")
+head(Final.df)
+```
+#### Export above Data frame to a .csv File
+```{r}
+
+write.csv(Final.df, file = "stgChessInfo.csv")
+```
+
+<p> [Back to the Menu~~~~~~~~~~~~~~~ ](#stp0) </p>
+
