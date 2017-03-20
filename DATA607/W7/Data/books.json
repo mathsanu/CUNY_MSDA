@@ -9,7 +9,6 @@
                ],
 		"ISBN" :"978-1782162148",
 		"Yearpublished": 2015
-		"Price" : 49.99
 	},
 	{
 		"Title": "Probability, With Applications and R",
@@ -18,7 +17,6 @@
                ],
 		"ISBN" :"978-1-118-24125-7",
 		"Yearpublished": 2016
-		"Price" : 140.00
 	},
 	{
 		"Title": "Machine Learning with R",
@@ -27,6 +25,5 @@
                ],
 		"ISBN" :"978-1782162148",
 		"Yearpublished": 2015
-		"Price" : 49.99
 	}]
 }
