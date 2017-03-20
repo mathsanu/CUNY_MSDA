@@ -1,0 +1,32 @@
+{"fbooks":[
+	{
+		"Title": "Automated Data Collection with R",
+		"Authors": [
+					"Simon Munzert",
+					"Christian Rubba",
+					"Peter Meibner",
+					"Dominic Nyhuis"
+               ],
+		"ISBN" :"978-1782162148",
+		"Yearpublished": 2015
+		"Price" : 49.99
+	},
+	{
+		"Title": "Probability, With Applications and R",
+		"Authors": [
+					"Robert P. Dobrow"
+               ],
+		"ISBN" :"978-1-118-24125-7",
+		"Yearpublished": 2016
+		"Price" : 140.00
+	},
+	{
+		"Title": "Machine Learning with R",
+		"Authors": [
+					"Brett Lantz"
+               ],
+		"ISBN" :"978-1782162148",
+		"Yearpublished": 2015
+		"Price" : 49.99
+	}]
+}
