@@ -1,0 +1,58 @@
+---
+title: "DATA607_W7_Working with XML and JSON in R"
+author: "Matheesha Thambeliyagodage"
+date: "March 19, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+###Loading packages
+```{r}
+#install.packages("XML")
+#install.packages("jsonlite")
+#install.packages("RCurl")
+
+library(XML)
+library(jsonlite)
+library(RCurl)
+```
+
+### Loading The Data
+
+```{r}
+url1="https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA607/W7/Data/books.html"
+url2="https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA607/W7/Data/books.json"
+url3="https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA607/W7/Data/books.xml"
+
+Lhtml= getURL(url1)
+Ljson = getURL(url2)
+Lxml =getURL(url3)
+
+```
+### HTML Process
+
+```{r}
+table = readHTMLTable(Lhtml, header = TRUE)
+htmlDF = data.frame(table )
+colnames( htmlDF) = c("Title","Authors","Publisher","YearPublished")
+htmlDF
+
+```
+### JSON Process
+```{r}
+jsonL = fromJSON(Ljson)
+jsonL
+```
+
+### XML Process
+
+```{r}
+xmlh = xmlParse(Lxml)
+xmlDF = xmlToDataFrame(xmlh)
+xmlDF
+```
+
+####  Are the three data frames identical?   < Yes they have same structure >
+
