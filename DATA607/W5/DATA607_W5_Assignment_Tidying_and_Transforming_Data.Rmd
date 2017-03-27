@@ -1,0 +1,113 @@
+---
+title: "DATA607_W5_Assignment_Tidying_and_Transforming_Data"
+author: "Matheesha Thambeliyagodage"
+date: "March 25, 2017"
+output: html_document
+---
+
+
+```{r}
+# install.packages("stringr")
+# install.packages("prettydoc")
+# install.packages("tidyr")
+# install.packages("dplyr")
+# install.packages("knitr")
+
+
+library(stringr)
+library(prettydoc)
+library(knitr)
+library(tidyr)
+library(dplyr)
+```
+
+#### 1). Uploaded .csv file from Github....
+```{r}
+my_data <- read.csv("https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA607/W5/flights.csv" ,stringsAsFactors = F)
+my_data
+```
+#### 2). Display Data/Headings....
+```{r}
+str(my_data) 
+```
+
+#### 3). Assign two values to the missing cell values ....
+```{r}
+my_data[2, 1] <- "ALASKA"
+my_data[5, 1] <- "AM WEST"
+my_data
+```
+
+#### 4). Assign two new column names....
+
+```{r}
+names(my_data)[1:2] <- c('Airlines','Status')
+my_data
+```
+#### 5). Gather flight details and cities in to two vectors....
+```{r}
+Tidydata<-gather(my_data, "cities","flights",3:7)
+Tidydata
+```
+
+#### 6). Filter the rows with data into new Data Farme....
+```{r}
+Tidydata1 <- filter(Tidydata, Status !='')
+Tidydata1
+```
+
+#### 7). With spread function Pivot Status column for the data in flight column and send the data to a new data frame....
+```{r}
+Tidydata2<-spread(Tidydata1, Status, flights)
+Tidydata2
+```
+#### 8). Display data in two data frames in string format....
+```{r}
+glimpse(Tidydata1)
+glimpse(Tidydata2)
+```
+#### 9). Display Tidydata1 - data in two data frames in table format....
+```{r}
+kable(Tidydata1)
+```
+
+#### 10). Select only given columns....
+```{r}
+select(Tidydata1,Airlines, cities)
+filter(Tidydata2, cities=='Phoenix')
+```
+#### 11). Select distinct columns....
+```{r}
+distinct(Tidydata1,Airlines, cities)
+```
+#### 12). Calculate the ratio between Delayed and On_Time flights....
+```{r}
+Tidydata2 %>% 
+mutate(ratio=delayed/(delayed+`on_time`)) %>%
+  arrange(cities, Airlines)
+```
+#### 13). Plotting a graph....
+```{r}
+library(ggplot2)
+Tidydata2 <- mutate(Tidydata2, Total = delayed + `on_time`, PercentDelayed = delayed / Total * 100)
+Tidydata2 <- arrange(Tidydata2, cities, PercentDelayed)
+
+ggplot(Tidydata2,aes(x=cities,y=PercentDelayed,fill=factor(Airlines)))+
+    geom_bar(stat="identity",position="dodge")
+```
+
+#### 14).Export Data in to a .csv....
+
+```{r}
+# write.csv(my_data, 'E:/0_MSC/Modules/607- Data Acquisition and Management/Asignments/W5/FlightStatusTable.csv', row.names=T)
+
+write.csv(my_data, "../W5/FlightStatusTable.csv")
+
+```
+
+#### 15). Group by airline and summarize the total on time flights divided by the total flights.....
+```{r}
+delays <- Tidydata2 %>% group_by(Airlines) %>% summarise(MeanPercent = round(mean(PercentDelayed), 0))
+delays
+```
+
