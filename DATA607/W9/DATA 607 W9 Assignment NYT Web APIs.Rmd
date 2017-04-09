@@ -1,0 +1,70 @@
+---
+title: "DATA 607 Week 9 Assignment: Using Web APIs - New York Times"
+author: "Matheesha Thambeliyagodage"
+date: "April 9, 2017"
+output: html_document
+---
+The New York Times web site provides a rich set of APIs, as described here: http://developer.nytimes.com/docs . The goal of the Week 9 assignment is to use one of the New York Times APIs, construct an interface in R to read in the JSON data, and transform it to an R dataframe.
+
+```{r results='hide', message=FALSE, warning=FALSE}
+
+library(ggplot2)
+library(knitr)
+library(tidyjson)
+library(sqldf)
+library(RCurl)
+library(dplyr)
+library(tidyr)
+
+
+```
+Construct the Request URI using the Books API.
+```{r}
+api_key <- "b72e3548831c4431a88db5b27ad33d87"
+main_url <- "https://api.nytimes.com/svc/books/v3/lists/best-sellers/history.json"
+request <- getURL(paste0(main_url,'?api-key=', api_key))
+```
+Below shows the structure of the Books API json response.It illustrate the json format.
+![](https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA607/W9/NYT_API.jpg)
+
+According to the above format ,using tidyjson I extracted key information from the JSON structure using the pipeline operator %>%. In this case, the JSON structure is complex. In this particular case, the "books_df" object was created, but when entered to "ranks_history" object it isterted to pull multiple rows because of different "published_date", "primary_isbn13", then I comented them . 
+
+####Creating an aggregated data frame from the above to find the publishers popularity. And plot them in a graph
+
+```{r}
+books_df <- request %>% 
+    spread_values(status = jstring("status"))  %>%
+    enter_object("results") %>%             # Look at their cart
+      gather_array("document.id") %>%
+       spread_values(book_names = jstring("title"), 
+                description = jstring("description"),
+                author = jstring("author"),
+                price =jnumber("price"),
+                publisher = jstring("publisher"))
+        # enter_object("ranks_history") %>% 
+        # gather_array("document.id") %>%
+        # spread_values(published_on = jstring("published_date"),
+        #               rank = jnumber("rank"),
+        #               ISBN = jstring("primary_isbn13"))
+```
+```{r}
+kable(books_df)
+```
+
+####Creating an aggregated data frame from the above to find the publishers popularity. And plot them in a graph
+```{r}
+df1 <- sqldf("select publisher,count(*) Count from books_df group by publisher ") 
+```
+
+```{r}
+ ggplot( data = df1, aes  (x = publisher, y=Count )) + 
+   geom_bar(stat="identity") + 
+   coord_flip() +
+   scale_fill_manual(values=c("#ff0000", "#ffff00", "#00ff00")) + 
+   xlab("Publisher") + 
+   ylab("# of Boos Published") +
+   ggtitle ("NY Times Best Book Publisher") +
+   theme(legend.position="bottom") +
+   guides(fill=guide_legend(title="Direction of Change Since Last Week:"))
+```
+
