@@ -1,0 +1,148 @@
+---
+title: "DATA607_Project4_Matheesha_Thambeliyagodage"
+author: "Matheesha Thambeliyagodage"
+date: "April 18, 2017"
+output: html_document
+---
+It can be useful to be able to classify new "test" documents using already classified "training" documents.  A common example is using a corpus of labeled spam and ham (non-spam) e-mails to predict whether or not a new document is spam.  
+
+For this project, you can start with a spam/ham dataset, then predict the class of new documents (either withheld from the training dataset or from another source such as your own spam folder).   One example corpus:  https://spamassassin.apache.org/publiccorpus/
+```{r message=FALSE, warning=FALSE}
+library(tm)
+library(knitr)
+library(plyr)
+library(wordcloud)
+```
+###Setup data storing directory
+```{r}
+#getwd()
+setwd("../data/")
+```
+###Dataload Directly from the URL
+```{r}
+spam_url <- "https://spamassassin.apache.org/old/publiccorpus/20030228_spam.tar.bz2"
+spam2_url <- "https://spamassassin.apache.org/old/publiccorpus/20050311_spam_2.tar.bz2"
+hard_ham_url <- "https://spamassassin.apache.org/old/publiccorpus/20030228_hard_ham.tar.bz2"
+easy_ham_url <- "https://spamassassin.apache.org/old/publiccorpus/20030228_easy_ham.tar.bz2"
+
+#Download tarballs
+download.file(spam_url, destfile="spam.tar.gz")
+download.file(spam2_url, destfile="spam2.tar.gz")
+download.file(hard_ham_url, destfile="hardham.tar.gz")
+download.file(easy_ham_url, destfile="easyham.tar.gz")
+
+#Extract tarballs
+untar("spam.tar.gz")
+untar("spam2.tar.gz")
+untar("hardham.tar.gz")
+untar("easyham.tar.gz")
+
+#Create spam and ham corpus
+spam <- Corpus(DirSource("spam"))
+spam2 <- Corpus(DirSource("spam_2"))
+easy_ham <- Corpus(DirSource("easy_ham"))
+hard_ham <- Corpus(DirSource("hard_ham"))
+# length(spam)
+# length(spam2)
+# length(easy_ham)
+```
+###Cleaning and filterning text files
+```{r}
+tdm_dtm_opts <- list(removePunctuation=TRUE, removeNumbers=TRUE, stripWhitespace=TRUE, tolower=TRUE, stopwords=TRUE, minWordLength = 2,removePunctuation("'"),removePunctuation("|"),removePunctuation("`"))
+
+#Remove cmds file
+if (file.exists("easy_ham/cmds")) file.remove("easy_ham/cmds")
+if (file.exists("hard_ham/cmds")) file.remove("hard_ham/cmds")
+if (file.exists("spam/cmds")) file.remove("spam/cmds")
+
+#Add meta labels
+meta(spam, tag = "type") <- "spam"
+meta(easy_ham, tag = "type") <- "easy_ham"
+meta(hard_ham, tag = "type") <- "hard_ham"
+```
+###Creating Document term matrix
+
+```{r}
+
+spam <- Corpus(DirSource("spam"))
+
+
+#Combine corpus objects.
+
+spam_corpus <- c(spam, recursive=T)
+ham_corpus <- c(easy_ham, recursive=T)
+
+
+#Create reduced and randomized corpus
+
+spam_corpus_sample <- sample(spam_corpus, 500)
+ham_corpus_sapmle <- sample(ham_corpus, 500)
+
+
+#Build document-term matrix. 
+
+# spam_tdm <- DocumentTermMatrix(spam_corpus_sample)
+# ham_tdm <- DocumentTermMatrix(ham_corpus_sapmle)
+
+
+spam_tdm <- TermDocumentMatrix(spam_corpus_sample,control=tdm_dtm_opts)
+ham_tdm <- TermDocumentMatrix(ham_corpus_sapmle,control=tdm_dtm_opts)
+
+
+```
+Create Spam and Ham Data Frames:
+
+```{r}
+
+spam_df <- as.data.frame(as.table(spam_tdm))
+spam_df$spam_ham <- "SPAM"
+colnames(spam_df) <- c('TERM', 'SPAM_DOCS', 'SPAM_FREQ', 'TYPE_SPAM')
+spam_df <- subset(spam_df, select = -c(2) )
+spam_df$SPAM_FREQ[is.na(spam_df$SPAM_FREQ)] <- '0'
+spam_df <- ddply(spam_df, .(TERM, TYPE_SPAM), summarize, SPAM_FREQ = sum(as.numeric(SPAM_FREQ)))
+NUM_TABLE_ROWS <-10
+kable(head(spam_df, n = NUM_TABLE_ROWS))
+spam_count <- nrow(spam_df)
+```
+
+```{r}
+ham_df <- as.data.frame(as.table(ham_tdm))
+ham_df$spam_ham <- "HAM"
+colnames(ham_df) <- c('TERM', 'HAM_DOCS', 'HAM_FREQ', 'TYPE_HAM')
+ham_df <- subset(ham_df, select = -c(2) )
+ham_df$HAM_FREQ[is.na(ham_df$HAM_FREQ)] <- '0'
+ham_df <- ddply(ham_df, .(TERM, TYPE_HAM), summarize, HAM_FREQ = sum(as.numeric(HAM_FREQ)))
+kable(head(ham_df, n = NUM_TABLE_ROWS))
+ham_count <- nrow(ham_df)
+```
+
+###Combine both data frames using common term
+```{r}
+# now hopefully merge them with no memory issues..
+all_df <- merge(x = ham_df, y = spam_df, by="TERM", all = TRUE)
+# since this is like an outer join, fill the nulls with Zeros...
+all_df$SPAM_FREQ[is.na(all_df$SPAM_FREQ)] <- '0'
+all_df$TYPE_SPAM[is.na(all_df$TYPE_SPAM)] <- 'SPAM'
+all_df$HAM_FREQ[is.na(all_df$HAM_FREQ)] <- '0'
+all_df$TYPE_HAM[is.na(all_df$TYPE_HAM)] <- 'HAM'
+all_df[is.na(all_df)] <- '0'
+```
+###Showing the combined data frame
+```{r}
+all_df$SPAM_WEIGHT <- as.numeric(all_df$SPAM_FREQ) - as.numeric(all_df$HAM_FREQ)
+kable(head(all_df[order(-as.numeric(all_df$HAM_FREQ)), ], n=NUM_TABLE_ROWS))
+kable(head(all_df[order(-as.numeric(all_df$SPAM_FREQ)), ], n=NUM_TABLE_ROWS))
+```
+###HAM Cloude
+```{r}
+wordcloud(ham_corpus, max.words = 200, random.order = FALSE, colors=c('blue'))
+```
+###SPAM Cloude
+```{r}
+wordcloud(spam_corpus, max.words = 200, random.order = FALSE, colors=c('red'))
+```
+```{r}
+summary(all_df)
+```
+
+
