@@ -1,0 +1,117 @@
+---
+title: "DATA606_Lab7_Linear_Regression"
+author: "Matheesha Thambeliyagodage"
+date: "April 28, 2017"
+output: html_document
+---
+DATA606_Lab7 Introduction to linear regression
+
+```{r message=FALSE, warning=FALSE,results='hide'}
+library("DATA606")
+library("ggplot2")
+
+```
+
+```{r}
+download.file("http://www.openintro.org/stat/data/mlb11.RData", destfile = "mlb11.RData")
+load("mlb11.RData")
+head(mlb11)
+
+```
+
+#### Question 1
+Choose two variable from mlb11 that you think might be a good predictor of runs. Produce a scatterplot of the two variables and fit a linear model. At a glance, does there seem to be a linear relationship?
+
+####Answer 1
+I chose runs and bat_avg to see if it is a good predictor.
+From the plot and summary statistics below it looks to me that the two variables fit a liner model.
+
+y = b0 + b1X = -642.8+5242.2*bat_avg
+
+```{r}
+mlb11.lm1  <- lm(runs ~ bat_avg, data = mlb11)
+plot(mlb11$runs ~ mlb11$bat_avg, main = "Relationship RUNS vs BAT_AVG")
+abline(mlb11.lm1 )
+```
+<p>
+####Question 2
+How does this relationship compare to the relationship between runs and at_bats? Use the R2 values from the two model summaries to compare. Does your variable seem to predict runs better than at_bats? How can you tell?
+
+```{r}
+mlb11.lm2  <- lm(runs ~ at_bats, data = mlb11)
+plot(mlb11$runs ~ mlb11$at_bats, main = "Relationship RUNS vs AT_BATS")
+abline(mlb11.lm2 )
+```
+```{r}
+summary(mlb11.lm1)
+summary(mlb11.lm2)
+```
+####Answer 2
+The relationship between runs and bat_avg seems to be stronger than that of runs and at_bats. 
+The R-squared at_bats is 0.3729 while bat_avg is 0.6561. Given the higher R-squared, I could say the model using bat_avg is better predictor of runs. 
+
+####Question 3
+Now that you can summarize the linear relationship between two variables, investigate the relationships between runs and each of the other five traditional variables. Which variable best predicts runs? Support your conclusion using the graphical and numerical methods we've discussed (for the sake of conciseness, only include output for the best variable, not all five).
+
+####Answer 3
+The  bat_avg variable seems the best predict for runs. The next best variable is hits for predictor.
+
+```{r}
+mlb11.lm2=lm(runs~bat_avg,data=mlb11)
+ plot(mlb11$bat_avg,mlb11$runs,xlab="Bat_Avg",ylab="Runs",main="Batting Avg Vs runs") 
+ abline(mlb11.lm2)
+```
+```{r}
+#Hits
+mlb11.lm3=lm(runs~hits,data=mlb11)
+plot(mlb11$hits,mlb11$runs,xlab="Hits",ylab="Runs",main="HITS Vs RUNS") 
+abline(mlb11.lm3)
+```
+```{r}
+summary(mlb11.lm1)
+summary(mlb11.lm3)
+```
+
+```{r}
+ sum(mlb11.lm1$residuals^2) #Sum of squares -> bat_Avg
+ sum(mlb11.lm2$residuals^2) #Sum of squares -> at_bats
+ sum(mlb11.lm3$residuals^2) #Sum of squares -> Hits
+```
+####Question 4
+Now examine the three newer variables. These are the statistics used by the author of Moneyball to predict a teams success. In general, are they more or less effective at predicting runs that the old variables? Explain using appropriate graphical and numerical evidence. Of all ten variables we've analyzed, which seems to be the best predictor of runs? Using the limited (or not so limited) information you know about these baseball statistics, does your result make sense?
+
+####Answer 4
+Seems like newer variable predict runs better than old variables. The R2 value for newer variables are higher than that of old variable and the sum of square of residuals of newer variable is less than that of old variable. Given that the newer variables represent more advanced statistics of baseball it does make sense that they are better predictor of runs
+
+```{r}
+n1=lm(runs~new_onbase,data=mlb11)
+n2=lm(runs~new_slug,data=mlb11)
+n3=lm(runs~new_obs,data=mlb11)
+par(mfrow=c(1,3))
+plot(mlb11$new_onbase,mlb11$runs,xlab="onbase",ylab="runs",main="onbase Vs runs") 
+abline(n1)
+plot(mlb11$new_slug,mlb11$runs,xlab="slug",ylab="runs",main="SLUG Vs runs") 
+abline(n2)
+plot(mlb11$new_obs,mlb11$runs,xlab="new_obs",ylab="runs",main="OBS Vs runs") 
+abline(n3)
+```
+```{r}
+summary(n1)
+summary(n2)
+summary(n3)
+sum(n1$residuals^2) 
+sum(n2$residuals^2) 
+sum(n3$residuals^2) 
+
+```
+####Question 5
+Check the model diagnostics for the regression model with the variable you decided was the best predictor for runs.
+####Answer 5
+new_obs is the best predictor for runs. The model built using new_obs has R-squared value of 0.93 which is higher than the models built using other variable. The residual sum of errors is 20345.54 which is lowest compared to models built using other variables
+
+```{r}
+summary(n3)
+sum(n3$residuals^2)
+```
+
+
