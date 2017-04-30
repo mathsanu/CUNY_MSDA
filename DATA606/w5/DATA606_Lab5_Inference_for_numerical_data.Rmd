@@ -1,0 +1,138 @@
+---
+title: "DATA606_Lab5_Inference_for_numerical_data"
+author: "Matheesha Thambeliyagodage"
+date: "April 29, 2017"
+output: html_document
+---
+
+
+```{r message=FALSE, warning=FALSE,results='hide'}
+library(dplyr)
+library(plyr)
+library(data.table)
+library(knitr)
+```
+
+```{r}
+download.file("http://www.openintro.org/stat/data/nc.RData", destfile = "nc.RData")
+load("nc.RData")
+```
+<b>Exercise 1 </b> 
+What are the cases in this data set? How many cases are there in our sample?
+
+```{r}
+ls()
+head(nc)
+summary(nc)
+```
+<b>Exercise 2 </b> 
+Make a side-by-side boxplot of habit and weight. What does the plot highlight about the relationship between these two variables?
+
+```{r}
+
+by(nc$weight, nc$habit, summary)
+
+```
+```{r}
+boxplot(nc$weight[nc$habit =="nonsmoker"],nc$weight[nc$habit == "smoker"],xlab="habit",ylab="weight",main="Weight vs. habit", names = c("nonsmoker", "smoker"))
+```
+
+
+  
+  
+<b>Exercise 3 </b> 
+
+Check if the conditions necessary for inference are satisfied. Note that you will need to obtain sample sizes to check the conditions. You can compute the group size using the same by command above but replacing mean with length.
+
+```{r}
+by(nc$weight, nc$habit, length)
+```
+<b>Exercise 4 </b> 
+Write the hypotheses for testing if the average weights of babies born to smoking and non-smoking mothers are different.
+Next, we introduce a new function, inference, that we will use for conducting hypothesis tests and constructing confidence intervals.
+
+*   H0 = The average weights of babies born to smoking and non-smoking mothers are not different
+*   HA = The average weights of babies born to smoking and non-smoking mothers are different
+
+```{r}
+inference(y = nc$weight, x = nc$habit, est = "mean", type = "ht", null = 0, 
+          alternative = "twosided", method = "theoretical")
+```
+
+<b>Exercise 5 </b> 
+Change the type argument to "ci" to construct and record a confidence interval for the difference between the weights of babies born to smoking and non-smoking mothers.
+```{r}
+inference(y = nc$weight, x = nc$habit, est = "mean", type = "ci", null = 0, 
+          alternative = "twosided", method = "theoretical", 
+          order = c("smoker","nonsmoker"))
+```
+
+### On your own
+
+<b>Exercise 1</b> 
+
+  Calculate a 95% confidence interval for the average length of pregnancies (weeks) and interpret it in context. Note that since you're doing inference on a single population parameter, there is no explanatory variable, so you can omit the x variable from the function.
+```{r}
+#using the custom inference function
+inference(y = nc$weeks, est = "mean", type = "ci", method = "theoretical")
+```
+
+
+
+
+ 
+  
+<b>Exercise 2</b> 
+  Calculate a new confidence interval for the same parameter at the 90% confidence level. You can change the   confidence level by adding a new argument to the function: conflevel = 0.90.
+
+```{r}
+#using the custom inference function
+inference(y = nc$weeks, est = "mean", type = "ci", method = "theoretical", conflevel = 0.90)
+
+```
+
+
+  
+<b>Exercise 3</b> 
+  Conduct a hypothesis test evaluating whether the average weight gained by younger mothers is different than the average weight gained by mature mothers.
+  
+The null hypothesis is the average weight gained by younger mothers are not different from the average weight gained by mature mothers. Based on the test statics of p-value of 0.8526 there is strong evidence that we fail to reject the null hypothesis that the average weight gained by younger mothers are not different from the average weight gained by mature mothers. 
+
+```{r}
+#using the custom inference function
+inference(nc$weight, nc$mature, type="ht", est="mean", null=0, method="theoretical", alternative="twosided")
+```
+
+<b>Exercise 4</b> 
+  Now, a non-inference task: Determine the age cutoff for younger and mature mothers. Use a method of your choice, and explain how your method works.
+ 
+ Based on the summary data and the boxplot the age cutoff for younger and mature mothers is 35. Look at the summary data the max age for younger mom is 34, whereas the mininum age for mature mother is 35. In the boxplot for the age of mature mom the minimum value of a data set is 35.  
+ 
+```{r}
+by(nc$mage, nc$mature,summary)
+```
+
+```{r}
+ boxplot(nc$mage[nc$mature == "mature mom"])
+``` 
+ 
+
+ 
+ 
+ 
+<b>Exercise 5</b> 
+  Pick a pair of numerical and categorical variables and come up with a research question evaluating the relationship between these variables. Formulate the question in a way that it can be answered using a hypothesis test and/or a confidence interval. Answer your question using the inference function, report the statistical results, and also provide an explanation in plain language.
+ 
+Interested in researching the relationship between mothers' ages and the term of their pregnancy. The null hypothesis will be that there is no relationship between mothers' ages and the term of their pregnancy.
+ 
+```{r}
+inference(nc$mage, nc$premie, est = "mean", type = "ht", null = 0,alternative = "twosided", method = "theoretical",order = c("full term","premie"))
+```
+    
+Based on the test statics of p-value of 0.8266 there is strong evidence that we fail to reject the null hypothesis there is no relationship between mothers' ages and the term of their pregnancy. 
+
+
+
+
+
+
