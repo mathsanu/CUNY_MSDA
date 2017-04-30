@@ -1,0 +1,146 @@
+---
+title: "DATA606_Lab4a_Statistical_Inference_Sampling_Distributions_1"
+author: "Matheesha Thambeliyagodage"
+date: "April 29, 2017"
+output: html_document
+---
+
+```{r message=FALSE, warning=FALSE,results='hide'}
+library(dplyr)
+library(plyr)
+library(data.table)
+library(knitr)
+```
+
+```{r}
+download.file("http://www.openintro.org/stat/data/ames.RData",destfile ="ames.RData")
+load("ames.RData")
+area <- ames$Gr.Liv.Area
+price <- ames$SalePrice
+
+summary(area)
+```
+
+```{r}
+hist(area)
+```
+  
+  
+  <b>Exercise 1 </b> 
+Describe this population distribution.  
+
+
+<b>The population distribution is right skewed and unimodal. You can see the right skew as the mean is closer to the tail. The range is is about 5,300. By using a smaller bin (20) we can see some extream outliers between 4,000 to 6,000.
+</b>
+
+```{r}
+samp1 <- sample(area, 50)
+```
+```{r}
+hist(samp1)
+```
+  
+<b>Exercise 2 </b> 
+  
+Describe the distribution of this sample. How does it compare to the distribution of the population? 
+
+```{r}
+mean(samp1)
+summary(samp1)
+```
+  
+<b> 
+The distribution of the 50 samples follow that of the population distribution. This agrees with the basic properties of point. The sample mean (point estimate) is close to the population mean. However, the range is not as wide (only about 600) and the outliers are not as extreme. However, since this is a simple random sample the outcome will differ if we do not use the set.seed function </b>
+
+<b>Exercise 3 </b> 
+<b>
+Take a second sample, also of size 50, and call it samp2. How does the mean of samp2 compare with the mean of samp1? Suppose we took two more samples, one of size 100 and one of size 1000. Which would you think would provide a more accurate estimate of the population mean?
+</b>
+
+
+##On your own
+So far, we have only focused on estimating the mean living area in homes in Ames. Now you'll try to estimate the mean home price.
+
+<b>Exercise 1 </b> 
+Take a random sample of size 50 from price. Using this sample, what is your best point estimate of the population mean?
+
+```{r}
+samp_price <- sample(price, 50)
+samp_priceMean <- mean(samp_price)
+
+```
+
+
+<b>Exercise 2 </b> 
+Since you have access to the population, simulate the sampling distribution for x¯price by taking 5000 samples from the population of size 50 and computing 5000 sample means. Store these means in a vector called sample_means50. Plot the data, then describe the shape of this sampling distribution. Based on this sampling distribution, what would you guess the mean home price of the population to be? Finally, calculate and report the population mean.
+
+```{r}
+sample_means50<-rep(0,5000)
+for(i in 1:5000){
+samp<-sample(price,50)
+sample_means50[i]<-mean(samp)
+}
+```
+
+```{r}
+hist(sample_means50, breaks = 25)
+```
+```{r}
+summary(price)
+population_mean <- mean(sample_means50)
+population_mean
+```
+The shape of the sampling distribution seems to have a normal distribution centered around a mean of $180,000.
+The above calculated population mean is: $180748.6.
+
+<b>Exercise 3 </b> 
+Change your sample size from 50 to 150, then compute the sampling distribution using the same method as above, and store these means in a new vector called sample_means150. Describe the shape of this sampling distribution, and compare it to the sampling distribution for a sample size of 50. Based on this sampling distribution, what would you guess to be the mean sale price of homes in Ames?
+
+```{r}
+sample_means150 <- rep(NA, 5000)
+
+for(i in 1:5000){
+   samp <- sample(price, 150)
+   sample_means150[i] <- mean(samp)
+   }
+
+hist(sample_means150, breaks = 25)
+```
+
+<b>Exercise 4 </b> 
+Of the sampling distributions from 2 and 3, which has a smaller spread? If we're concerned with making estimates that are more often close to the true value, would we prefer a distribution with a large or small spread?
+
+
+
+### Comparison:
+
+```{r}
+par(mfrow = c(1, 2))
+
+xlimits <- range(sample_means50)
+
+hist(sample_means50, breaks = 20, xlim = xlimits)
+hist(sample_means150, breaks = 20, xlim = xlimits)
+```
+
+```{r}
+xlimits50 <- range(sample_means50)
+xlimits150 <- range(sample_means150)
+
+
+xlimits50
+xlimits150
+
+xlimits50[2] - xlimits50[1]
+
+## [1] 83251.28
+
+xlimits150[2] - xlimits150[1]
+
+## [1] 49657.87
+```
+
+Sampling distributions from 3 has smaller spread but bigger sample size. We would prefer a distribution with a small spread because it is associated with low data variability.
+
+
+
