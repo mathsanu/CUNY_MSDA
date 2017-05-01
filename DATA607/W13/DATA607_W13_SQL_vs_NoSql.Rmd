@@ -1,0 +1,232 @@
+---
+title: "DATA607_W13_SQL_vs_NoSql"
+author: "Matheesha Thambeliyagodage"
+date: "April 30, 2017"
+output: html_document
+---
+
+###For this project I am using the data feeds from the site "http://ourairports.com/data/".
+###In this web I found couple of important and up-to-date data about airports in the world, even small Seaplane Base around the world.
+
+```{r message=FALSE,warning=FALSE}
+
+library("RMongo")
+library("jsonlite")
+library("stringr")
+library("knitr")
+library("RMySQL")
+library("sqldf")
+library("DT")
+library("reshape2")
+library("tidyr")
+
+```
+
+
+```{r message=FALSE,warning=FALSE}
+#load ourairports data from .scv files
+#ourairports
+
+#Loading airports.csv
+airports_df <- read.csv("https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA607/W13/airports.csv", header=TRUE)
+
+#Loading countries.csv
+countries_df <- read.csv("https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA607/W13/countries.csv", header=TRUE)
+
+#Loading regions.csv
+regions_df <- read.csv("https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA607/W13/regions.csv", header=TRUE)
+
+#Loading runwayss.csv
+runways_df <- read.csv("https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA607/W13/runways.csv", header=TRUE)
+
+head(airports_df)
+head(countries_df)
+head(regions_df)
+head(runways_df)
+
+```
+
+### Connecting to  MySQL database in the localhost.
+
+```{r message=FALSE,warning=FALSE}
+library('RMySQL')
+#mydb = dbConnect(MySQL(), user='root', password='root', host='localhost', dbname="ourairports")
+mydb = dbConnect(MySQL(), user='root', password='root', host='localhost')
+
+# DROP the database if exists using RMySQL in R
+dbSendQuery(mydb, "DROP DATABASE if exists ourairports;")
+# creating the database using RMySQL in R
+dbSendQuery(mydb, "CREATE DATABASE ourairports;")
+
+mydb = dbConnect(MySQL(), user='root', password='root', host='localhost', dbname="ourairports")
+```
+### Insert above record sets into MySQL
+
+```{r}
+
+# 1 ~~~airports_df~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#Insert records from airports_df in MySql Database ("ourairports")
+dbSendQuery(mydb, "drop table if exists airports")
+dbWriteTable(mydb, value = airports_df, name = "airports", overwrite=TRUE, row.names=FALSE,add_id = TRUE)
+
+# 2 ~~~countries_df~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#Insert records from airports_df in MySql Database ("ourairports")
+
+dbSendQuery(mydb, "drop table if exists countries")
+dbWriteTable(mydb, value = countries_df, name = "countries", overwrite=TRUE, row.names=FALSE,add_id = TRUE)
+
+# 3 ~~~ regions_df ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#Insert records from airports_df in MySql Database ("ourairports")
+
+dbSendQuery(mydb, "drop table if exists regions")
+dbWriteTable(mydb, value = regions_df, name = "regions", overwrite=TRUE, row.names=FALSE,add_id = TRUE)
+
+# 4 ~~~ runways_df ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#Insert records from airports_df in MySql Database ("ourairports")
+
+dbSendQuery(mydb, "drop table if exists runways")
+dbWriteTable(mydb, value = runways_df, name = "runways", overwrite=TRUE, row.names=FALSE,add_id = TRUE)
+
+```
+
+###Then pull Countries<- Regions <- Airports with join tables
+
+
+```{r}
+
+airp_df<-dbGetQuery(mydb,"SELECT c.code,c.name, 
+c.continent,
+r.name region_name,
+r.code  region_Code, 
+r.local_code  region_local_code,
+a.name airport_name,
+a.type,
+a.elevation_ft, 
+a.municipality
+FROM ourairports.countries c
+inner join regions r
+ON c.code = r.iso_country
+inner join airports a
+on c.code = a.iso_country
+and r.code = a.iso_region
+where c.code = 'US';")
+
+
+head(airp_df)
+```
+### Disconnect the connection to MySql.
+```{r}
+dbDisconnect(mydb)
+mydb<-NA
+
+#detach RMySQL to prevent masking of functions below
+detach("package:RMySQL", unload=TRUE)
+```
+###MongoDB Data Processing
+###Before you run below comand go to your CMD prompt and start mongo services using "mongod" and leave the comand window open
+
+```{r}
+library(RMongo)
+library(rmongodb)
+
+
+#connect to MongoDB db
+mongo <- mongoDbConnect("ourairports", "localhost", 27017)
+mongo = mongo.create(host = "localhost")
+mongo.is.connected(mongo)
+mongo.get.databases(mongo)
+
+```
+### Method 1 to add a documnt - create function to input data
+
+```{r}
+
+library(RMongo)
+library(jsonlite)
+library(stringr)
+
+mongo <- mongoDbConnect("ourairports", "localhost", 27017)
+
+insert_colection<-function(connection,db,df){
+
+  #convert df row to json mongodb document
+  df_json<-toJSON(df)
+
+  #clean up
+  df_json<-sub("[","",df_json, fixed = TRUE)
+  df_json<-sub("]","",df_json, fixed = TRUE)
+  df_json<-as.character(df_json)
+
+  #insert document
+  dbInsertDocument(connection, db, df_json)
+
+}
+
+```
+### Call to the above function to insert rows/documents of above data set airp_df
+```{r}
+
+#airports
+for(i in 1:nrow(airp_df)) {
+  insert_colection(mongo,"airp_df",airp_df[i,])
+}
+```
+
+## Method 2 to add a documnt - Using json and bson
+
+```{r}
+library(jsonlite)
+library(rmongodb)
+
+#toJSON(airp_df)
+#x <- toJSON(unname(split(airp_df, 1:nrow(airp_df))))
+#cat(x)
+# library(mongolite)
+# m <- mongo("b")
+# m$insert(b)
+
+#Convert a data.frame to a mongo.bson object
+
+mongo <- mongo.create()
+mongo.is.connected(mongo)
+
+db <- "ourairports"
+coll <- "worldairports"
+
+bs<-mongo.bson.from.df(airp_df)
+
+mongo.insert(mongo, ns = paste0(db ,".", coll), b = bs)
+  
+head(bs)
+```
+### Quering MongoDB
+
+```{r}
+library(RMongo)
+library(jsonlite)
+library(stringr)
+library(knitr)
+mongo <- mongoDbConnect("ourairports", "localhost", 27017)
+
+
+#dbGetQuery(mongo, "airp_df",'{"code": "US"}')
+#dbGetQuery(mongo, "worldairports",'{"code": "US"}')
+#kable(dbGetQuery(mongo, "worldairports",'{"lat": {$gt:70}}'))
+
+#Note -> Above select queries are not working with Knit but when running in current chunk they are working,
+# Iwasn't able to figureout the issue
+
+
+```
+
+
+###Comparison Between SQL and NoSQL
+
+
+
+* 1.SQL databases are relational databases while NoSQL databases are graphical or network datases. 
+* 2.NoSQL databases strength lie on data that are naturally heirarchical (such as organization charts) while SQL databases are better in performing aggregate functions such as summation and averaging of column values.  
+* 3.SQL databases are vertically scalable while NoSQL databases are horizontally scalable. This means that we can increase the scale of SQL databases by increasing CPU speed while we can increase the scale of NoSQL databases by increasing the number of servers.  
+* 4.SQL databases are the preferred databases for applications with complex queries while NoSQL databases are the preferred databases for big data. 
+* 5.SQL databases emphasizes on ACID properties ( Atomicity, Consistency, Isolation and Durability) whereas the NoSQL database follows the Brewers CAP theorem ( Consistency, Availability and Partition tolerance ).  
+* 6.SQL databases are better for applications with heavy transaction processing because it provides better data integrity than NoSQL databases.
