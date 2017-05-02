@@ -1,0 +1,145 @@
+---
+title: "DATA606_W2_HW2_MatheeshaThambeliyagodage"
+author: "Matheesha Thambeliyagodage"
+date: "February 24, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**(Page-116)**
+
+**2.2 Roulette wheel.** The game of roulette involves spinning a wheel with 38 slots: 18 red, 18
+black, and 2 green. A ball is spun onto the wheel and will eventually land in a slot, where each
+slot has an equal chance of capturing the ball.
+
+Solution 1 > Each Spin is independent. There for P(getting a red slot ) is equal, that is 18/36
+```{r}
+18/36
+```
+Solution 2 > Even for 300 spins P(getting a red slot ) is 18/36
+```{r}
+18/36
+```
+Solution 3 > Not always, there could be unfair condition of the wheel or/and ball ..
+
+**(Page-116)**
+
+**2.3 Four games, one winner.** Below are four versions of the same game. Your archnemisis
+gets to pick the version of the game, and then you get to choose how many times to flip a coin: 10
+times or 100 times. Identify how many coin flips you should choose for each version of the game.
+It costs $1 to play each game. Explain your reasoning.
+
+
+**(a)** If the proportion of heads is larger than 0.60, you win $1.
+
+
+**(b)** If the proportion of heads is larger than 0.40, you win $1.
+
+
+**(c)** If the proportion of heads is between 0.40 and 0.60, you win $1.
+
+
+**(d)** If the proportion of heads is smaller than 0.30, you win $1.
+
+
+**Page 124**
+** 2.38 Baggage fees.** An airline charges the following baggage fees: $25 for the first bag and
+$35 for the second. Suppose 54% of passengers have no checked luggage, 34% have one piece of
+checked luggage and 12% have two pieces. We suppose a negligible portion of people check more
+than two bags.
+
+(a) Build a probability model, compute the average revenue per passenger, and compute the
+corresponding standard deviation.
+```{r}
+bags <- c(0, 1, 2)
+prob <- c(0.54, 0.34, 0.12)
+charg <- c(0, 25, 25 + 35)
+
+probmod <- data.frame(bags, prob, charg)
+probmod
+
+# Compute the average revenue per passenger
+probmod$avgrev <- probmod$prob * probmod$charg
+probmod
+
+sum(probmod$avgrev)
+
+
+```
+
+```{r}
+#Compute Variance
+probmod$mean <- probmod$weightRev - avgRevPerPax
+probmod$DiffMeanSqrd <- probmod$DiffMean ^ 2
+probmod$DiffMeanSqrdTimesProb <- probmod$DiffMeanSqrd * probmod$prob
+probmod
+# Compute standard deviation
+varRevPerPax <- sum(probmod$DiffMeanSqrdTimesProb)
+sdRevPerPax <- sqrt(varRevPerPax)
+sdRevPerPax
+```
+
+```{r}
+prob <- c(0.54, 0.34, 0.12)
+bags <- c(0, 1, 2)
+fees <- c(0, 25, 25 + 35)
+df38 <- data.frame(prob, bags, fees)
+df38$weightRev <- df38$prob * df38$fees
+#open in browser PRO version Are you a developer? Try out the HTML to PDF API pdfcrowd.com
+df38
+# Compute the average revenue per passenger
+avgRevPerPax <- sum(df38$weightRev)
+avgRevPerPax
+# Compute Variance
+df38$DiffMean <- df38$weightRev - avgRevPerPax
+df38$DiffMeanSqrd <- df38$DiffMean ^ 2
+df38$DiffMeanSqrdTimesProb <- df38$DiffMeanSqrd * df38$prob
+df38
+# Compute standard deviation
+varRevPerPax <- sum(df38$DiffMeanSqrdTimesProb)
+sdRevPerPax <- sqrt(varRevPerPax)
+sdRevPerPax
+
+```
+
+
+2.44 Income and gender. The relative frequency table below displays the distribution of
+annual total personal income (in 2009 inflation-adjusted dollars) for a representative sample of
+96,420,486 Americans. These data come from the American Community Survey for 2005-2009.
+This sample is comprised of 59% males and 41% females.69
+(a) Describe the distribution of total personal income.
+(b) What is the probability that a randomly chosen US
+resident makes less than $50,000 per year?
+(c) What is the probability that a randomly chosen US
+resident makes less than $50,000 per year and is female?
+Note any assumptions you make.
+(d) The same data source indicates that 71.8% of females
+make less than $50,000 per year. Use this value to
+determine whether or not the assumption you made in
+part (c) is valid.
+
+
+
+2.6 Dice rolls. If you roll a pair of fair dice, what is the probability of
+(a) getting a sum of 1?
+(b) getting a sum of 5?
+(c) getting a sum of 12?
+
+
+2.8 Poverty and language. The American Community Survey is an ongoing survey that
+provides data every year to give communities the current information they need to plan investments
+and services. The 2010 American Community Survey estimates that 14.6% of Americans live below
+the poverty line, 20.7% speak a language other than English (foreign language) at home, and 4.2%
+fall into both categories.59
+(a) Are living below the poverty line and speaking a foreign language at home disjoint?
+(b) Draw a Venn diagram summarizing the variables and their associated probabilities.
+(c) What percent of Americans live below the poverty line and only speak English at home?
+(d) What percent of Americans live below the poverty line or speak a foreign language at home?
+(e) What percent of Americans live above the poverty line and only speak English at home?
+(f) Is the event that someone lives below the poverty line independent of the event that the person
+speaks a foreign language at home?
+
+
