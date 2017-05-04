@@ -1,0 +1,421 @@
+---
+title: "DATA606_W3_Lab3_MatheeshaThambeliyagodage"
+author: "Matheesha Thambeliyagodage"
+date: "May 1, 2017"
+output: html_document
+---
+
+```{r, echo=FALSE} 
+library(ggplot2)
+
+myTheme <- theme(axis.ticks=element_blank(),  
+                  panel.border = element_rect(color="red", fill=NA), 
+                  panel.background=element_rect(fill="#FBFBFB"), 
+                  panel.grid.major.y=element_line(color="red", size=0.5), 
+                  panel.grid.major.x=element_line(color="red", size=0.5),
+                  plot.title=element_text(size="10"))
+```
+
+### 3.2 Area under the curve Part II (p158)
+
+***What percent of a standard normal distribution \(N(\mu = 0, \sigma = 1)\) is found in each region? Be sure to draw a graph.***
+
+#### a. Z > -1.13
+
+First define in `R` code the Z score and then use the `pnorm` function to determine the percentage on the left tail. Subtract this value from 1 to find the right tail value.
+
+```{r}
+zGt <- -1.13
+pGt <- 1 - pnorm(zGt)
+pGt
+```
+
+The percent of the standard normal distribution found in the region Z > `r zGt` is `r pGt`.
+
+```{r, echo=FALSE}
+x <- seq(-4, 4, length=100)
+hx <- dnorm(x)
+df <- data.frame(x, hx)
+dfRegion <- df[df$x > zGt, ]
+
+g1 <- ggplot(data=df) + 
+  geom_line(aes(x=x, y=hx)) + 
+  geom_ribbon(data=dfRegion, aes(ymin=0, ymax=hx, x=x), fill="lightblue") +
+  labs(title="a) Region Greater Than Z = -1.13", y="", x="") +
+  myTheme
+g1
+```
+
+#### b. Z < 0.18
+
+First define in `R` code the Z score and then use the `pnorm` function to determine the percentage on the left tail (less than). 
+
+```{r}
+zLt <- 0.18
+pLt <- pnorm(zLt)
+pLt
+```
+
+The percent of the standard normal distribution found in the region Z < `r zLt` is `r pLt`.
+
+```{r, echo=FALSE}
+x <- seq(-4, 4, length=100)
+hx <- dnorm(x)
+df <- data.frame(x, hx)
+dfRegion <- df[df$x < zLt, ]
+
+g1 <- ggplot(data=df) + 
+  geom_line(aes(x=x, y=hx)) + 
+  geom_ribbon(data=dfRegion, aes(ymin=0, ymax=hx, x=x), fill="lightblue") +
+  labs(title="b) Region Less Than Z = 0.18", y="", x="") +
+  myTheme
+g1
+```
+
+#### c. Z > 8
+
+Again define in `R` code the Z score and then use the `pnorm` function to determine the percentage on the right tail (greater than).
+
+```{r}
+zGt <- 8
+pGt <- 1 - pnorm(zGt)
+round(pGt, 4)
+```
+
+The percent of the standard normal distribution found in the region Z > `r zGt` is `r round(pGt, 4)`. This particular scenario is so extreme that it doesn't even show on the visualization.
+
+```{r, echo=FALSE}
+x <- seq(-9, 9, length=100)
+hx <- dnorm(x)
+df <- data.frame(x, hx)
+dfRegion <- df[df$x > zGt, ]
+
+g1 <- ggplot(data=df) + 
+  geom_line(aes(x=x, y=hx)) + 
+  geom_ribbon(data=dfRegion, aes(ymin=0, ymax=hx, x=x), fill="lightblue") +
+  labs(title="c) Region Greater Than Z = 8", y="", x="") +
+  myTheme
+g1
+```
+
+#### d. |Z| < 0.5
+
+Again define in `R` code the Z score and then use the `pnorm` function to determine the percentage on the left tail. Due to the absolute value sign on the Z, we are looking for the middle region and subtract the pnorm value from 0.5. Also, this becomes a two tail-like question and we therefore double the value resulting from the `pnorm` subtraction.
+
+```{r}
+zAbs <- 0.5
+pAbs <- 2 * (0.5 - pnorm(-1 * zAbs))
+round(pAbs, 4)
+```
+
+The percent of the standard normal distribution found in the region |Z| < `r zAbs` is `r round(pAbs, 4)`. 
+
+```{r, echo=FALSE}
+x <- seq(-4, 4, length=100)
+hx <- dnorm(x)
+df <- data.frame(x, hx)
+dfRegion <- df[(-1 * zAbs) < df$x & df$x < zAbs, ]
+
+g1 <- ggplot(data=df) + 
+  geom_line(aes(x=x, y=hx)) + 
+  geom_ribbon(data=dfRegion, aes(ymin=0, ymax=hx, x=x), fill="lightblue") +
+  labs(title="d) Region |Z| < 0.5", y="", x="") +
+  myTheme
+g1
+```
+
+### 3.4 Triathlon times, Part I (p158)
+
+Racer | Group          | Time (sec) |
+------|----------------|------------|
+Leo   | Men, 30 - 34   | 4948       |  
+Mary  | Women, 25 - 29 | 5513       |
+
+Group        | Mean | Stdev |
+-------------|------|-------|
+Men, 30-34   | 4313 | 583   |
+Women, 25-29 | 5261 | 807   |
+
+* Normally distributed finishing times for both groups
+
+#### a) Write down the short-hand for these two normal distributions.
+
+The short-hand for these two normal distributions follows:
+
+Men, 30-34: \(N(\mu = 4313, \sigma = 583)\)
+
+Women, 25-29: \(N(\mu = 5261, \sigma = 807)\)
+
+#### b) What are the Z-scores for Leo's and Mary's finishing times? What do these Z-score tell you?
+
+Using `R`, we define the mean, standard deviation and individual times. Then we compute the Z score using the equation \(Z = \frac{x-\mu}{\sigma}\) for Leo and Mary.
+
+```{r}
+men3034mean <- 4313
+men3034sd <- 583
+leoTime <- 4948
+
+leoZc <- (leoTime - men3034mean) / men3034sd
+leoZc
+
+women3034mean <- 5261
+women3034sd <- 807
+maryTime <- 5513
+
+maryZc <- (maryTime - women3034mean) / women3034sd
+maryZc
+```
+
+Leo's Z score is `r round(leoZc, 2)`, and Mary's Z score is `r round(maryZc, 2)`. These Z scores tell me how each of the participants faired in comparison to their respective groups.
+
+#### C) Did Leo or Mary rank better in their respective groups? Explain your reasoning.
+
+Mary did better than Leo in their respective groups. Although they are both finishing above the mean time, Mary was much closer to the women's mean than Leo was to the men's mean. Another way to look at this is Mary was much closer to the left tail (lower Z equates to lower finishing time).
+
+#### d) What percent of the triathletes did Leo finish faster than in his group?
+
+Using the `pnorm` function, we can determine the percent of triathletes who finished faster than Leo. By then taking the difference from 1 we can determine the percent of triathletes whom Leo's finished faster than. 
+
+```{r}
+pFasterThanLeo <- pnorm(leoZc)
+pFasterThanLeo
+
+pLeoFasterThan <- 1 - pFasterThanLeo 
+pLeoFasterThan
+```
+
+Leo finished faster than `r round(pLeoFasterThan * 100, 2)`% of the triathletes in his group.
+
+#### e) What percent of the triatheletes did Mary finish faster than in her group?
+
+Again, using the `pnorm` function, we can determine the percent of triathletes who finished faster than Mary. By then taking the difference from 1 we can determine the percent of triathletes whom Mary finished faster than. 
+
+```{r}
+pFasterThanMary <- pnorm(maryZc)
+pFasterThanMary
+
+pMaryFasterThan <- 1 - pFasterThanMary 
+pMaryFasterThan
+```
+
+Mary finished faster than `r round(pMaryFasterThan * 100, 2)`% of the triathletes in her group.
+
+#### f) If the distributions of finishing times are not nearly normal, would your answers to parts (b) - (e) change? Explain your reasoning.
+
+Most certainly the answers to parts (b) - (e) would change if the distribution of finishing times were not nearly normal. The Z scores and percentages are based on the area under the normal distribution curve. If the curve were not symmetric and were skewed to one side or the other, this would affect the area under the curve at any given finishing time value.
+
+### 3.18 Heights of femal college students (p161)
+
+```{r}
+heights <- c(54,55,56,56,57,58,58,59,60,60,60,61,61,62,62,63,63,63,64,65,65,67,67,69,73)
+dfHeights <- data.frame(heights)
+
+meanHeight <- mean(heights)
+meanHeight
+
+sdHeight <- sd(heights)
+sdHeight
+```
+
+#### a) Determine if the heights approximately follow the 68-95-99.7% Rule.
+
+We can check the data versus the normal 68-95-99.7% Rule by selecting out the values that fall into each range, and then divide the number of rows in the range by the total number of rows. To do this, I've defined a function `percentBySd` that we can use as a helper to compute the percentages through repeated calls.
+
+```{r}
+percentBySd <- function(data, numSd)
+{
+  m <- mean(data)
+  s <- sd(data)
+  
+  sd1Lower <- m - (s * numSd)
+  sd1Upper <- m + (s * numSd)
+  
+  sdData <- data[sd1Lower < data & data < sd1Upper]
+  pSdData <- length(sdData) / length(data)
+  return (pSdData)
+}
+# 1 Standard Deviation
+sd1 <- percentBySd(heights, 1) * 100
+# 2 Standard Deviation
+sd2 <- percentBySd(heights, 2) * 100
+# 3 Standard Deviation
+sd3 <- percentBySd(heights, 3) * 100
+sdList <- c(sd1, sd2, sd3)
+```
+
+It does appear that the height data basically follows the 68-95-99.7% Rule: `r sd1`-`r sd2`-`r sd3`.
+
+```{r, echo=FALSE}
+sdList
+```
+
+#### b) Do these data appear to follow the normal distribution? Explain your reasoning usign the graphs provided below.
+
+Based on the graphs in the text, the data roughly follows the normal distribution, but with a bit of skew. The best fit normal curve on the histogram is not a perfect fit, but it could be worse. Likewise, the normal probability plot generally follows the normal line, deviating mostly at the upper end.
+
+```{r, echo=FALSE}
+x <- seq(meanHeight - (sdHeight * 4), meanHeight + (sdHeight * 4), length=150)
+hx <- dnorm(x, mean=meanHeight, sd=sdHeight)
+dfNorm <- data.frame(x, hx=(hx * 120))
+
+g1 <- ggplot(data=dfHeights) + 
+  geom_bar(aes(x=heights), binwidth=4, fill="lightblue") + 
+  geom_line(data=dfNorm, aes(x=x, y=hx)) +
+  myTheme
+g1
+```
+
+### 3.22 Defective Rate  (p162)
+
+* 2% defective rate
+* Production is a random process
+* Each widget is independent of the others
+
+#### a) What is the probability that the 10th transistor produced is the first with a defect?
+
+Following the equation given on p143 of the text, \(p_n=(1-p)^{n-1} \times p\), written in `R` code, we have:
+
+```{r}
+defectRate <- 0.02
+successRate <-  1 - defectRate
+n <- 10
+
+p10 <- successRate^(n-1) * defectRate
+p10
+```
+
+The probability of the `r n`th transistor produced is the first with a defect is `r round(p10, 4)`.
+
+#### b) What is the probability that the machine produces no defective transistors in a batch of 100?
+
+We could look at this as asking what the probability is that a defective transitor will be produced in a batch of 100, and then take the complement. This would be P(n=1) + P(n=2) ...
+```{r}
+p100D <- 0
+for(i in 1:100)
+{
+  p100D <- p100D + (successRate^(i-1) * defectRate)
+}
+p100C <- 1 - p100D
+
+```
+
+The probability that the machine produces no defector transistors in a batch of 100 is `r round(p100C, 4)`.
+
+#### c) On average, how many transistors would you expect to be produced before the first with a defect? What is the standard deviation?
+
+Using the equation from p143 of the text, the follow `R` code computes the expected value and standard deviation:
+
+```{r}
+expectedVal <- 1 / defectRate
+expectedVal
+
+stdevDef <- sqrt( (1 - defectRate) / defectRate^2 )
+stdevDef
+```
+
+I would expect `r expectedVal` transistors to be produced before the first with a defect. The standard deviation is `r stdevDef`.
+
+#### d) Another machine that also produces transistors has a 5% defective rate where each transistor is produced independent of the others. On average how many transistors would you expect to be produced with this machine before the first with a defect? What is the standard deviation?
+
+Using the new defective rate, the follow computations, in `R` help use determine the expected value and standard deviation:
+
+```{r}
+defectRate <- 0.05
+successRate <-  1 - defectRate
+```
+
+```{r}
+expectedVal <- 1 / defectRate
+expectedVal
+
+stdevDef <- sqrt( (1 - defectRate) / defectRate^2 )
+stdevDef
+```
+
+I would expect `r expectedVal` transistors to be produced before the first with a defect. The standard deviation is `r stdevDef`.
+
+#### e) Based on your answers to parts (c) and (d), how does increasing the probability of an event affect the mean and standard deviation of the wait time until success?
+
+Increasing the probability of an event decreases the mean and standard deviation of the wait time until the event.
+
+### 3.38 Male Children  (p166)
+
+The actual probability of have a boy is 0.51. Suppose a couple plans to have 3 kids.
+
+#### a) Use the binomial model to calculate the probability that two of them will be boys.
+
+Using the equation on p147 of the text, \(\frac{n!}{k!(n-k)!}p^k(1-p)^{n-k}\):
+
+```{r}
+pBoy <- 0.51
+k <- 2
+n <- 3
+
+facN <- factorial(n)
+facK <- factorial(k)
+facNminusK <- factorial(n-k)
+
+p2boysOf3 <- ( facN / (facK * facNminusK) ) * pBoy^k * (1-pBoy)^(n-k)
+p2boysOf3
+```
+
+The probability that two of the three children will be boys is `r round(p2boysOf3, 4)`.
+
+#### b) Write out all possible orderings of 3 children, 2 of whom are boys. Use these scenarios to calculate the same probability from part (a) by using the addition rule for disjoint outcomes. Confirm that your answers from parts (a) and (b) match.
+
+The following table shows the possible ordering of 3 children with 2 boys:
+
+Child 1 | Child 2 | Child 3 |
+--------|---------|---------|
+Girl    | Boy     | Boy     |
+Boy     | Girl    | Boy     |
+Boy     | Boy     | Girl    |
+
+The following `R` code shows the computation of the probability using the addition rule for disjoint outcomes. As a result of the fact that the probabilities for each of the 3 scenarios above are the same, rather than add them up, we can simply multiply by 3:
+
+```{r}
+p1 <- ((1-pBoy) * pBoy * pBoy) * 3
+p1
+```
+
+As you can see, the result of (a) `r round(p2boysOf3, 4)` equals the result of (b) `r round(p1, 4)`.
+
+
+#### c) If we wanted to calculate the probability that a couple who plans to have 8 kids will have 3 boys, briefly describe why the approach from part (b) would be more tedious than the approach from part (a).
+
+I'm not sure I agree that one approach is more tedious than the other. Mathematically, they appear to be identical, but the use of the factorial seems to simplify the determination of the number of variations that can be created over \(n\) children. Beyond this, the power raised on the boy's probability and the power raised on the girl's probability are simply shorthand for the multiplication that occurs in the addition rule's disjoint compution. In the end, they are simply different ways of writing the same mathematical operations. Certainly the use of the formula can result is a quicker result than computing the result individually for each scenario, but this is true of many mathematical theorems. Once proven to apply in broad practice, the formula can be used without having to re-prove it.
+
+### 3.42 Serving in Volleyball (p166)
+
+A volleyball player has a 15% chance of making the serve. Suppose that her serves are independent of each other.
+
+#### a) What is the probability that on the 10th try she will make her 3rd successful serve?
+
+Using the negative binomial distribution:
+
+```{r}
+pServe <- 0.15
+n <- 10
+k <- 3
+
+negBinomialDist <- function(p, n, k)
+{
+  pRes <- (factorial(n - 1) / 
+             (factorial(k-1) * (factorial((n - 1) - (k - 1)))
+              )
+           ) * 
+    p^k * 
+    (1-p)^(n-k)
+}
+
+p3of10 <- negBinomialDist(pServe, n, k)
+p3of10
+```
+
+#### b) Suppose she has made two successful serves in nine attempts. What is the probability that her 10th serve will be successful?
+
+As a result of all trials being independent, the probability the next serve will be successful is still 15%, regardless of the prior history.
+
+#### c) Even though parts (a) and (b) discuss the same scenario, the probabilities you calculated should be different. Can you explain the reason for the discrepancy?
+
+There isn't a discrepancy in my mind. The first scenario is talking about a series of future serves, where the second scenario is talking about a single future serve. A single future serve is known to have a 15% probability of success, given the assumption that her serves are independent. The "2 of 9" prior information isn't a factor in the determination of the next serve.
