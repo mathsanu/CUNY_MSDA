@@ -1,0 +1,198 @@
+---
+title: "DATA606_W8_HW8_Multiple_and_Logistic_Regression"
+author: "Matheesha Thambeliyagodage"
+date: "May 4, 2017"
+output: html_document
+---
+
+### Exercise 8.2  Baby Weights, Part II (p395)
+
+```{r eval=FALSE, echo=FALSE}
+
+library(ggplot2)
+
+myTheme <- theme(axis.ticks=element_blank(),  
+                  panel.border = element_rect(color="gray", fill=NA), 
+                  panel.background=element_rect(fill="#FBFBFB"), 
+                  panel.grid.major.y=element_line(color="red", size=0.5), 
+                  panel.grid.major.x=element_line(color="red", size=0.5),
+                  plot.title=element_text(size="10"))
+
+```
+
+
+<b> (a) Write the equation of the regression line.</b>
+
+\(y=120.07 - 1.93 x_{parity}\)
+
+<b> (b) Interpret the slope in this context, and calculate the predicted birth weight of first borns and
+others. </b>
+
+- The slope (120.07) indicates the first born (parity = 0) would be predicted to weigh 120.07 ounces. The others born, based on the slope of -1.93 would be (r 120.07 - 1.93) oz.
+
+<b> (c) Is there a statistically significant relationship between the average birth weight and parity?. </b>
+  
+  - Given the p-value of 0.1052 for the parity parameter,is given larger than 0.05, I conclude there is not a statistically significant relationship between average birth weight and parity.
+  
+### Exercise 8.4  Absenteeism. (p397)
+
+<b>(a) Write the equation of the regression line. </b>
+
+\(y = 18.93 - 9.11 x_{eth} + 3.10 x_{sex} + 2.15 x_{lrn}]\)
+
+<b> (b) Interpret each one of the slopes in this context. </b>
+
+  - The slope of eth indicates that, all else being equal, there is a 9.11 day reduction in the predicted absenteeism when the subject is no aboriginal.
+
+  - The slope of sex indicates that, all else being equal, there is a 3.10 day increase in the predicted absenteeism when the subject is male.
+
+  - The slope of lrn indicates that, all else being equal, there is a 2.15 day increase in the predicted absenteeism when the subject is a slow learner.
+
+<b> (c) Calculate the residual for the first observation in the data set: a student who is aboriginal, male, a slow learner, and missed 2 days of school. </b> 
+
+```{r}
+eth <- 0
+sex <- 1
+lrn <- 1
+
+predictdays <- 18.93 - 9.11*eth + 3.1*sex + 2.15*lrn
+days <- 2
+
+resid <- days - predictdays
+
+resid
+```
+<b> The variance of the residuals is 240.57, and the variance of the number of absent days for all students in the data set is 264.17. Calculate the R2 and the adjusted R2. Note that there are 146 observations in the data set. </b>
+
+```{r}
+varresid <- 240.57
+varabs <- 264.17
+n <- 146
+k <- 3
+
+R2 <- 1-(varresid/varabs)
+R2a <- 1 - ((varresid/varabs)*((n-1)/(n-k-1)))
+
+R2
+
+R2a
+
+```
+
+### 8.8 Absenteeism, Part II (p399)
+
+  - The learner status variable, lrn should be removed first,based on the adjusted (R^2)=0.0723.
+  
+### 8.16 Challenger disaster, Part I (p403)
+
+<b> 
+Each column of theh table above represents a different shutttle mission. Examine these data and describe what you observe with respect to the relationship between temperature and damaged O-rings
+</b>
+
+```{r}
+library(ggplot2)
+
+temperature <- c(53,57,58,63,66,67,67,67,68,69,70,70,70,70,72,73,75,75,76,76,
+                 78,79,81)
+
+damaged <- c(5,1,1,1,0,0,0,0,0,0,1,0,1,0,0,0,0,1,0,0,0,0,0)
+
+undamaged <- c(1,5,5,5,6,6,6,6,6,6,5,6,5,6,6,6,6,5,6,6,6,6,6)
+
+data <- data.frame(temperature = temperature, damaged = damaged, 
+                   undamaged = undamaged)
+
+ggplot(data,aes(x=temperature,y=damaged)) + geom_point() 
+```
+
+  
+  - It does seem like low temperatutures are more likely to cause damaged O-Rings. Though there are some high temperatures that result in damage, and overall there is more undamaged O-rings than damaged O-Rings, it looks like below a certain temperature there are no un-damaged O-rings.
+  
+<b>(b) Failures have been coded as 1 for a damaged O-ring and 0 for an undamaged O-ring, and
+a logistic regression model was fit to these data. A summary of this model is given below.
+Describe the key components of this summary table in words.
+</b>
+
+- Intercept: The log odds of damaged O-ring when temperature is 0.
+- Slope: For a unit increase in temperature (1 degree) how much will the log odds ratio change.
+
+<b>(c) Write out the logistic model using the point estimates of the model parameters. </b>
+
+\(\log_e(\frac{p_i}{1-p_i}) = 11.6630 - 0.2162 x_{temp}\)
+
+
+<b>(d) Based on the model, do you think concerns regarding O-rings are justified? Explain. </b>
+
+- First, define a function of the model:
+
+```{r}
+oringModel <- function(temp)
+{
+  right <- 11.6630 - 0.2162 * temp
+  
+  prob <- exp(right) / (1 + exp(right))
+  
+  return (prob)
+}
+```
+
+- Now, lets look at the model probabilities graphically.
+
+```{r}
+temps <- seq(32, 85)
+dfProbDamage <- data.frame(Temperature=temps, ProbDamage=oringModel(temps))
+
+g1 <- ggplot(dfProbDamage) + geom_line(aes(x=Temperature, y=ProbDamage )) 
+g1
+
+```
+
+  - Given the high probabiliy of damage to O-rings under (50^o) ((> r round(100 * oringModel(50), 2))%) according to the model and the fact that the O-rings are "Criticality 1" components, I do think concerns regarding the O-rings are justified.
+
+### 8.18 Challenger disaster, Part II (p404)
+
+- (a) Use the model to calculate the probability that an O-ring will become damaged at each of the following ambient temperatures: 51, 53, 55 degrees F.
+
+```{r}
+temps <- c(51,53,55)
+dfProbDamage <- data.frame(Temperature=temps, ProbDamage=oringModel(temps))
+dfProbDamage
+```
+- (b) Add the model-estimated probabilities from part (a) on the plot, then connect these dots using a smooth curve to represent the model-estimated probabilities.
+
+- First define the raw data in a data.frame.
+```{r}
+dfRaw <- data.frame(Missing=seq(1, 23), 
+                    Temp=c(53,57,58,63,66,67,67,67,68,69,70,70,70,
+                           70,72,73,75,75,76,76,78,79,81),
+                    Damaged=c(5,1,1,1,0,0,0,0,0,0,1,0,1,0,0,0,0,1,0,0,0,0,0),
+                    Undamaged=c(1,5,5,5,6,6,6,6,6,6,5,6,5,6,6,6,6,5,6,6,6,6,6))
+dfRaw$ProbDamage <- dfRaw$Damaged / (dfRaw$Damaged + dfRaw$Undamaged)
+head(dfRaw)
+```
+
+- Then  create a data.frame for the model-estimated probilibities using our predefined model.
+
+```{r}
+temps <- seq(51, 71, by=2)
+dfProbDamage <- data.frame(Temperature=temps, ProbDamage=oringModel(temps))
+```
+
+
+- Finally, we show the visualization combining the raw data and the model curve.
+
+```{r}
+g1 <- ggplot(dfRaw) + 
+  geom_point(aes(x=Temp, y=ProbDamage), alpha=0.5, colour="blue") + 
+  geom_line(data=dfProbDamage, aes(x=Temperature, y=ProbDamage), colour="red") +
+  geom_point(data=dfProbDamage, aes(x=Temperature, y=ProbDamage), colour="red") +
+  labs(x="Temperature", y="Probability of damage") +
+  ylim(0, 1) 
+g1
+
+```
+
+<b>(c) Describe any concerns you may have regarding applying logistic regression in this application, and note any assumptions that are required to accept the model's validity. </b>
+
+- Based on the visualization of the raw data, the temperature data does appear to have a linear relationship wo the probability of damage to O-rings, at least to some significant degree.
+
