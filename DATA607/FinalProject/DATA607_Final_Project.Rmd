@@ -1,0 +1,314 @@
+---
+title: "DATA607_Final_Project"
+author: "Matheesha Thambeliyagodage"
+date: "May 5, 2017"
+output: html_document
+---
+
+```{r message=FALSE,warning=FALSE,echo=FALSE}
+library(jsonlite)
+library(tidyjson)
+library(stringr)
+library(DT)
+library(reshape2)
+library(ggplot2)
+library(knitr)
+library(sqldf)
+library("RMySQL")
+library(RCurl)
+library(dplyr)
+library(tidyr)
+```
+
+<!-- <b> <span style="color: #2234cd"> Lung Cancer statistics in the...</span> </b> -->
+### <b><span style="color: #8e321f">Project Objective</span> </b>
+
+- This project seeks to investigate the density of the correlation between Lung Cancer with Air Pollution, Tobacco Smoke, exposure to Radon and Radiation and Arsanic in drinking water.
+-	There are lots of lung cancer patient around the world who suffer with the lung cancer but still hard to identify a good course for the reason. Most geographical locations don't have enough resources to measure the coursing risk factors but USA. 
+-	There for I decided to use the data sets available in USA to find the correlation between the problem and risk factors.
+  
+<b> <span style="color: #2234cd"> Lung Cancer statistics in the...</span> </b>
+```{r message=FALSE,warning=FALSE,echo=FALSE,background}
+mt1 <- matrix(c("|   *","|   *","|   *","|   *","|   *","|   *","|   *","|   *","|   *","|   *","|   *","|   *"),ncol=3,byrow=TRUE)
+colnames(mt1) <- c("Maximum","Moderate","Minimum")
+rownames(mt1) <- c("Cities with Air Pollution","Cities with Tobacco Smoke","Cities with Radon and Radiation","Cities with high Agriculture Industry")
+mt1 <- as.table(mt1)
+mt1
+```
+<b> <span style="color: #2234cd">Risk Factor statistics in the...</span> </b>
+```{r message=FALSE,warning=FALSE,echo=FALSE}
+mt1 <- matrix(c("|   *","|   *","|   *"),ncol=3,byrow=TRUE)
+colnames(mt1) <- c("Maximum","Moderate","Minimum")
+rownames(mt1) <- c("Cities with Lung Cancer")
+mt1 <- as.table(mt1)
+mt1
+```
+
+#### {#stp0}
+
+### <b><span style="color: #8e321f">Data Sources</span> </b>
+
+* USA Population Statistics
+<a href="https://en.wikipedia.org/wiki/List_of_U.S._states_and_territories_by_population">List of U.S. states and territories by population</a>        
+<b> <span style="color: #8000ff">[<span style="color: #8000ff"> Scrape HTML Table using rvest to data a frame</span>](#ds1)  </b>
+
+* USA State Abbreviations and FIPS
+<a href="https://www.bls.gov/cew/cewedr10.htm">USPS State Abbreviations and FIPS Codes</a>        
+<b> <span style="color: #8000ff">[<span style="color: #8000ff"> Scrape HTML Table using rvest to data a frame</span>](#ds2)  </b>
+
+* Cities with Air Pollution Ranks 
+<a href="http://www.americashealthrankings.org/explore/2015-annual-report/measure/air/state/ALL">America's Health Rankings</a>   
+<b> <span style="color: #8000ff">[<span style="color: #8000ff">Downloaded Report Data from this web site</span>](#ds3)  </b>
+
+* Cancer Statistics 
+<a href="https://www.cdc.gov/cancer/npcr/uscs/download_data.htm">United States Cancer Statistics (USCS)</a>     
+<b> <span style="color: #8000ff">[<span style="color: #8000ff">Downloaded Report Data from this web site</span>](#ds4)  </b>
+
+<!-- https://wonder.cdc.gov/controller/datarequest/D125;jsessionid=9988EE62A49AC0BF545B277A2E80B615 -->
+<!-- #<a href="https://nccd.cdc.gov/USCS/cancersbystateandregion.aspx?Year=2013&Variable1=California">United States Cancer Statistics (USCS)</a>  -->
+
+
+* Cities with Tobacco Smoke
+<a href="https://catalog.data.gov/dataset/behavioral-risk-factor-data-tobacco-use-2011-to-present">Behavioral Risk Factor Data: Tobacco Use (2011 to present) </a>        
+<b> <span style="color: #8000ff">Downloaded Report Data -> </span> </b>
+
+* Cities with Radon and Radiation
+<a href="https://www.epa.gov/radon/find-information-about-local-radon-zones-and-state-contact-information">EPA Map of Radon Zones including State Radon Information and Contacts</a> 
+
+* Cities with high Agriculture Industry for high Arsanic Levels 
+<a href="https://nccd.cdc.gov/USCS/cancersbystateandregion.aspx?Year=2013&Variable1=California">United States Cancer Statistics</a> 
+  
+  
+####  {#ds1}
+#### <b><span style="color: #8e321f">Following process enter into the wikipedia.org and scrape the HTM table. The process also design to cleanse and filter the data in to datatframe ... </span> </b>
+
+<p><img src="img\Pop1.jpg" alt="W3Schools.com" width="800" height="340" > </p>
+
+```{r message=FALSE,warning=FALSE}
+library(rvest)
+page <- read_html("http://en.wikipedia.org/wiki/List_of_U.S._states_and_territories_by_population")
+
+pop_table <- page %>%
+   html_node("table") %>%
+   html_table(fill = TRUE)
+
+pop_df <- as_data_frame(pop_table)
+
+pop_df <- pop_df %>% mutate(StateName = `State or territory`) %>% mutate(Population = `Population estimate, July 1, 2016`)
+popdf<- pop_df %>% select(StateName,Population)
+popdf
+
+```
+
+    
+<p> [<span style="color: green">Back to the Menu~~~~~~~~~~~~~~~ </span> ](#stp0) </p>
+  
+===============================================================================================================
+
+####  {#ds2}
+ 
+#### <b><span style="color: #8e321f">Following process extract State Abbreviations and FIPS Codes . They will need in future data frame mappings  ... </span> </b>
+
+<p><img src="img\statcode.jpg" alt="W3Schools.com" width="700" height="240" > </p>
+
+
+
+```{r message=FALSE,warning=FALSE}
+library(rvest)
+
+page <- read_html("https://www.bls.gov/cew/cewedr10.htm")
+
+stat_table <- page %>%
+   html_node("table") %>%
+   html_table(fill = TRUE)
+
+stat_df <- as_data_frame(stat_table,keep.rownames = TRUE)
+
+#stat_df <- stat_df %>% mutate(StateName = `State or territory`) %>% mutate(Population = `Population estimate, July 1, 2016`)
+statdf<- stat_df %>% select(X1,X2,X3,X4,X5,X6)
+statdf <- filter(statdf,X1!= 'State')
+statdf <- filter(statdf,X3!= 'State')
+df1 <-  statdf%>% mutate(State = X1) %>% mutate(StateCode = X2) %>% mutate(StateID = X3)
+df2 <-  statdf%>% mutate(State = X3) %>% mutate(StateCode = X4) %>% mutate(StateID = X5)
+statdf1 <-  select(df1,State,StateCode,StateID)
+statdf2 <-  select(df2,State,StateCode,StateID)
+
+statedf<- rbind(statdf1, statdf2)
+head(statedf)
+
+```
+
+
+<p> [<span style="color: green">Back to the Menu~~~~~~~~~~~~~~~ </span> ](#stp0) </p>
+
+===============================================================================================================
+
+####  {#ds3}
+ 
+#### <b><span style="color: #8e321f">Air Pollution Data files are stored in github and below process is loading them in to mysql. Then create separate data frames with the filtered values for analysis </span> </b>
+
+
+```{r message=FALSE,warning=FALSE}
+
+#Loading airports.csv
+airpo15_df <- read.csv("https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA607/FinalProject/data/2015SeniorRanks.csv", header=TRUE)
+airpo16_df <- read.csv("https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA607/FinalProject/data/2016SeniorRanks.csv", header=TRUE)
+```
+### Connecting to  MySQL database in the localhost.
+
+```{r message=FALSE,warning=FALSE}
+library('RMySQL')
+#mydb = dbConnect(MySQL(), user='root', password='root', host='localhost', dbname="ourairports")
+mydb = dbConnect(MySQL(), user='root', password='root', host='localhost')
+
+# DROP the database if exists using RMySQL in R
+dbSendQuery(mydb, "DROP DATABASE if exists 607finalprj;")
+# creating the database using RMySQL in R
+dbSendQuery(mydb, "CREATE DATABASE 607finalprj;")
+
+mydb = dbConnect(MySQL(), user='root', password='root', host='localhost', dbname="607finalprj")
+```
+### Insert above record sets into MySQL
+
+
+```{r message=FALSE,warning=FALSE}
+# 1 ~~~airpo15_df~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Create Table and Insert records from airpo15_df in MySql Database ("607finalprj")
+dbSendQuery(mydb, "drop table if exists allcensus")
+dbWriteTable(mydb, value = airpo15_df, name = "allcensus", overwrite=TRUE, row.names=FALSE,add_id = TRUE)
+
+# 1 ~~~airpo16_df~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Insert records from airpo16_df  into MySql table ("allcensus")
+dbWriteTable(mydb, 'allcensus', airpo16_df, row.names=F, append=T)
+
+
+```
+<b><span style="color: #8e321f">Creating an aggrigate Data fram from the data in mysql database</span> </b>
+
+```{r}
+airp_df<-dbGetQuery(mydb,"SELECT Edition ,`Measure.Name`,    `allcensus`.`State.Name`,
+    `allcensus`.`Rank`,
+    `allcensus`.`Value`,
+    `allcensus`.`Score`
+FROM 607finalprj.allcensus
+where `Measure.Name` = 'Air Pollution'
+order by `Value`;")
+head(airp_df,5)
+```
+
+<b><span style="color: #8e321f">According to the Air Pollution Ranks highest polluted States are</span> </b>
+
+```{r message=FALSE,warning=FALSE,echo=FALSE}
+apmax <- matrix(c("|   50","|   12.5","|   49","|   11.7","|   48","|   11.4","|   47","|   11.3","|   46","|   11.1"),ncol=2,byrow=TRUE)
+colnames(apmax) <- c("Rank","Highest")
+rownames(apmax) <- c("California","Idaho","Pennsylvania","Indiana","Illinois")
+apmax <- as.table(apmax)
+apmax
+```
+<b><span style="color: #8e321f">Moderately  polluted  States are</span> </b>
+```{r message=FALSE,warning=FALSE,echo=FALSE}
+apmod <- matrix(c("|   30","|   9.1","|   29","|   9","|   27","|   8.9","|   26","|   8.6","|   25","|   8.8"),ncol=2,byrow=TRUE)
+colnames(apmod) <- c("Rank","Moderate")
+rownames(apmod) <- c("Wisconsin","South Carolina","Mississippi","Utah","Connecticut")
+apmod <- as.table(apmod)
+apmod
+```
+
+<b><span style="color: #8e321f">Lowest polluted States are</span> </b>
+```{r message=FALSE,warning=FALSE,echo=FALSE}
+aplow <- matrix(c("|   5","|   6.2","|   4","|   6","|   3","|   5.7","|   2","|   5.2","|   1","|   5"),ncol=2,byrow=TRUE)
+colnames(aplow) <- c("Rank","Moderate")
+rownames(aplow) <- c("Vermont","Alaska","Montana","North Dakota","Wyoming")
+aplow <- as.table(aplow)
+aplow
+```
+
+
+<p> [<span style="color: green">Back to the Menu~~~~~~~~~~~~~~~ </span> ](#stp0) </p>
+
+===============================================================================================================
+
+####  {#ds4}
+ 
+#### <b><span style="color: #8e321f">Cancer statistics join with above data frame "State Population" to calculate the deaths as a percentage of the population. Otherwise direct total deaths will not be a accurate variable </span> </b>
+
+```{r message=FALSE,warning=FALSE}
+
+lungcancer_df <- read.csv("https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA607/FinalProject/data/LungCancer.csv", header=TRUE)
+
+lungcancer_df <- filter(lungcancer_df,Leading.Cancer.Sites == 'Lung and Bronchus')
+head(lungcancer_df,5)
+```
+
+```{r message=FALSE,warning=FALSE}
+# Join DF , calculating deathratio and deathrank
+
+lc_df <- left_join(lungcancer_df,popdf, by=c("State" = "StateName") )
+lc_df1<- lc_df %>% mutate(deathratio = (Deaths/as.numeric(gsub(",", "",Population)) ) * 10000) %>% arrange(desc(deathratio))%>%mutate(deathrank=row_number())
+
+head(lc_df1,5)              
+
+ls(lc_df1)
+
+```
+
+
+
+#### <b><span style="color: #8e321f">According to the above data following 5 States have the highest Deaths </span> </b>
+
+```{r}
+lc_df1 %>% filter(deathrank < 6)
+```
+#### <b><span style="color: #8e321f">According to the above data following 5 States have the lowest Deaths </span> </b>
+
+```{r}
+lc_df1 %>% filter(deathrank > 45)
+```
+
+
+```{r}
+library(ggplot2)
+ggplot(lc_df1, aes(fill=deathratio, y=deathratio, x=State)) + ggtitle("Death Ratio in each State ") +   geom_bar( stat="identity") + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + geom_point() 
+
+```
+
+#### <b><span style="color: #8e321f">Joining the Lung Cancer Death datafram and Air Polition datafrm by State to fingd the correlation   </span> </b>
+
+airp_df
+
+
+```{r message=FALSE,warning=FALSE}
+# Join DF , calculating deathratio and deathrank
+# head(lc_df1)
+# head(airp_df)
+
+lcap_df <- left_join(lc_df1,airp_df, by=c("State" = "State.Name") )
+# lc_df1<- lc_df %>% mutate(deathratio = (Deaths/as.numeric(gsub(",", "",Population)) ) * 10000) %>% arrange(desc(deathratio))%>%mutate(deathrank=row_number())
+
+head(lcap_df,5)              
+summary(lcap_df)
+```
+
+
+```{r}
+library(ggplot2)
+lcap_df.lm1  <- lm(deathratio ~ Value, data = lcap_df)
+plot(lcap_df$deathratio ~ lcap_df$Value, main = "Relationship between Lung Cancer Death Ratio  vs State Air Polution",xlab='Air Pollution',ylab='Death Ratio')
+ abline(lcap_df.lm1 )
+ abline(h=5.197,col = "red") 
+ abline(v= 8.800 ,col = "blue" )
+```
+
+```{r}
+summary(lcap_df.lm1)
+```
+
+- We get a lot of useful information here without being too overwhelmed by pages of output.
+
+- The estimates for the model intercept is 3.0822 and the coefficient measuring the slope of the relationship with Air_Polution_Value is 0.2439 and information about standard errors of these estimates is also provided in the Coefficients table. We see that the test of significance of the model coefficients is also summarized in that table <b> so we can see that there is evidence that the coefficient is significantly different to zero - as the Air Pollution increases so does Lung Cancer. </b> It proves weak Positive Correlation between the number of Air Pollution Value and Lunge Cancer Death Ratio.
+
+
+
+<p> [<span style="color: green">Back to the Menu~~~~~~~~~~~~~~~ </span> ](#stp0) </p>
+
+
