@@ -1,0 +1,202 @@
+---
+title: "Final_Project_Presentation"
+author: "Matheesha Thambeliyagodage"
+date: "May 2, 2017"
+output:
+   ioslides_presentation:
+  #slidy_presentation:
+    widescreen: true
+    smaller: true
+    #footer: "Copyright (c) 2014, RStudio"
+    
+---
+
+## <span style="color:#870818">Introduction: </span>
+Is there any correlation between the number of Airports and Human Population in the states, counties in USA.
+
+To achieve this objective I collected the data about all the airports and the population distribute all accross in USA.
+
+I wanted to look at the role of airports in the economic development of cities and regions. In general, the bigger the city the more airport activities there are, however they could be measured.  Metro size is strongly correlated with the total number of flights and the number of passengers.
+
+In USA we have different airport types. 
+
+## <span style="color:#870818">What are the cases, and how many are there? </span>
+  - In the data I identified following types of airports availale in the USA.
+    * Heliport				
+    * Small_airport				
+    * Closed				
+    * Seaplane_base				
+    * Balloonport				
+    * Medium_airport				
+    * Large_airport 
+  - Airports have a bigger effect on economic development by moving people and cargo.   
+  
+##  <span style="color:#870818"> cases....
+  - US population live around these airports.
+  - Identifying the human population distribution around them.
+  - Both the number of passengers and flights are related to economic output, wages, and incomes.
+  - Correlations could be include in time-sensitive manufacturing and distribution, hotel, entertainment, retail, convention, trade and exhibition complexes; 
+  
+## <span style="color:#870818">Data:</span> 
+  - For this project I am using the data feeds from the following two sites
+
+<span style="font-size:0.75em;text-decoration:underline;">
+   This site has most updated data about airports in the world. I do filter only the airports in USA
+</span>   
+<span style="color:#870818">1.http://ourairports.com/data.</span>   
+
+<span style="font-size:0.75em;text-decoration:underline;">
+USA Census web site </span>   
+<span style="color:#870818">2.https://www2.census.gov/programs-surveys/popest/datasets.</span>  
+      
+  - In these web sites I found important, accurate and up-to-date data information
+  - I made direct downloads from the .csv files into the data frames.
+  - Using the R package <b> dplyr </b>  hope to do staging of the data.
+
+##
+<span style="font-size:1.5em; color:#870818">What type of study is this: </span>    
+- This is a Observational study, because from the existing data I am trying to identify the correlation.    
+
+<span style="font-size:1.5em; color:#870818">Response: </span>   
+- The response variable is number of airports and is numerical.   
+
+<span style="font-size:1.5em; color:#870818">Explanatory: </span>   
+- The population in the area is the Explanatory and it is also numerical.  
+
+## <span style="color:#870818">Feeds:</span> 
+<img src="img\feeds.png" alt="W3Schools.com" width="700" height="500" >
+
+## <span style="color:#870818">Data File "Airports":</span> 
+<p><img src="img\ap1.png" alt="W3Schools.com" width="780" height="150" > </p>
+<p><img src="img\ap2.png" alt="W3Schools.com" width="780" height="150" > </p>
+<p><img src="img\ap3.png" alt="W3Schools.com" width="780" height="150" > </p>
+
+## <span style="color:#870818">Data File "Regions ":</span> 
+<!-- ![](./img/ap1.png) -->
+<p><img src="img\Rg1.png" alt="W3Schools.com" width="780" height="150" > </p>
+<p><img src="img\Rg2.png" alt="W3Schools.com" width="780" height="150" > </p>
+
+## <span style="color:#870818">Data File "Population":</span> 
+<!-- ![](./img/ap1.png) -->
+<p><img src="img\Pp1.png" alt="W3Schools.com" width="780" height="150" > </p>
+<p><img src="img\Pp2.png" alt="W3Schools.com" width="780" height="150" > </p>
+
+## <span style="font-size:0.80em; color:blue">Staging and Filtering data frames </span> 
+- USA Airports
+
+<span style="font-size:0.80em; color:Green"> >usairports_df = airports_df %>% filter(iso_country == "US")</span>    
+<span style="font-size:0.80em; color:Green"> >head(usairports_df)</span> 
+
+- USA Regions, USA Population
+
+<span style="font-size:0.80em; color:Green"> >usaregions_df = regions_df%>% filter(iso_country == "US"))</span>    
+<span style="font-size:0.80em; color:Green"> >head(usaregions_df)</span> 
+
+- USA Population
+
+<span style="font-size:0.80em; color:Green"> >usaPopult_df = Popult_df%>% filter(STATE != 0)</span>    
+<span style="font-size:0.80em; color:Green"> >head(usaPopult_df)</span> 
+
+
+## 
+<span style="font-size:0.80em; color:blue">Joining two data frames Airports and Regions to get the State Names</span> 
+
+<span style="font-size:0.80em; color:Green"> >df1<-inner_join(usairports_df,usaregions_df, by = c("iso_region"="code"))</span>    
+
+<span style="font-size:0.80em; color:Green"> >allairports_df <- arrange(select(df1,Region=iso_region,Municipality = municipality,State=name.y,AirPortName=name.x,AirPortType=type),(State))</span>
+
+<span style="font-size:0.80em; color:Green"> >head(allairports_df)</span>     
+
+<span style="font-size:0.80em; color:blue">Calculating Airport Counts by State and Airport Types in to two different Data Frames </span>    
+<span style="font-size:0.80em; color:Green"> >allairports_types_bystat_df <-  allairports_df %>%  
+                                group_by(State,AirPortType) %>% 
+                                summarise(airportcount = n())%>% 
+                                arrange%>% 
+                                filter(State != '(unassigned)')</span>     
+
+<span style="font-size:0.80em; color:Green">>head(allairports_types_bystat_df)</span>     
+
+<span style="font-size:0.80em; color:Green"> >allairports_bystat_df <-  allairports_df %>% 
+                          group_by(State) %>% 
+                          summarise(airportcount = n())%>% 
+                          arrange %>% 
+                          filter(State != '(unassigned)') </span>     
+                          
+<span style="font-size:0.80em; color:Green"> >head(allairports_bystat_df) </span>     
+
+## 
+<span style="font-size:0.80em; color:blue">Consider only the population in 2016</span>  
+
+<span style="font-size:0.80em; color:Green"> >allpopu_bystat_df <- arrange(select(usaPopult_df,Region=NAME,Population = POPESTIMATE2016) ,(Region))
+
+>head(allpopu_bystat_df)</span>     
+
+<span style="font-size:0.80em; color:blue">Join Airport Data Fram with the Population Data Frame and Calculate population in 10k </span>  
+
+<span style="font-size:0.80em; color:Green"> >allairports_allpopu_bystat_df<-left_join(allairports_bystat_df,allpopu_bystat_df, by = c("State"="Region"))</span>    
+
+<span style="font-size:0.80em; color:Green"> >allairports_allpopu_bystat_df <-allairports_allpopu_bystat_df%>% 
+                               select(State,airportcount,Population) %>% 
+                               mutate(Popu_10k = Population / 10000) </span>      
+
+<span style="font-size:0.80em; color:blue">Staging and Filtering data frames</span>  
+
+<span style="font-size:0.80em; color:Green"> > df3 <- left_join(allairports_types_bystat_df,allpopu_bystat_df, by = c("State"="Region")) </span>   
+
+<span style="font-size:0.80em; color:Green"> >allairports_types_allpopu_bystat_df<- df3 %>% 
+                                      select(State,AirPortType,airportcount,Population) %>% 
+                                      mutate(avgpop_airport = Population / airportcount) 
+summary(allairports_types_allpopu_bystat_df ) </span>   
+
+<span style="font-size:0.80em; color:Green"> > summary(allairports_allpopu_bystat_df) </span>     
+
+## 
+<span style="font-size:0.80em; color:blue">Create LM and plot the Graph</span>       
+
+<span style="font-size:0.80em; color:Green"> >allairports_allpopu_bystat_df.lm1  <- lm(airportcount ~ Popu_10k, data = allairports_allpopu_bystat_df) plot(allairports_allpopu_bystat_df$airportcount ~ allairports_allpopu_bystat_df$Popu_10k, main = "Relationship between State Population vs Airports",xlab='Population in States(10Ks)',ylab='Airport Count')  </span>      
+
+<span style="font-size:0.80em; color:Green"> >abline(allairports_allpopu_bystat_df.lm1 )</span>              
+
+<span style="font-size:0.80em; color:Green"> >abline(h=429,col = "red") </span>       
+
+<span style="font-size:0.80em; color:Green"> >abline(v=633,col = "blue" )</span> 
+
+
+##<span style="font-size:0.80em; color:blue">Relationship between State Population vs Airports</span>       
+<img src="img\lm.png" alt="W3Schools.com" width="700" height="500" >         
+
+##
+<span style="font-size:1.5em; color:#870818">Conclusion.</span>   
+
+<span style="font-size:0.80em; color:black">The above graph suggests that Airport Count increases linearly with Population in States(10Ks) so I will fit a simple linear regression model to the data model with the mean of Airport Count and Population in States(10Ks).</span>     
+
+<span style="font-size:0.80em; color:Green"> >summary(allairports_allpopu_bystat_df.lm1)</span>    
+<img src="img\sum1.png" alt="W3Schools.com" width="600" height="400" > 
+
+##
+<span style="font-size:1.5em; color:#870818">Conclusion......</span>   
+
+-We get a lot of useful information here without being too overwhelmed by pages of output.        
+
+-The estimates for the model intercept is 189.87966 and the coefficient measuring the slope of the relationship with Popu_10k is 0.37886 and information about standard errors of these estimates is also provided in the Coefficients table. We see that the test of significance of the model coefficients is also summarised in that table so we can see that there is evidence that the coefficient is significantly different to zero - as the population increases so does airports. It proves Positive Correlation between the number of airports and state population.
+
+
+##
+<span style="font-size:1.5em; color:#870818">Total Airport Count in each State......</span>  
+<span style="font-size:0.80em; color:Green"> >library(ggplot2)
+ggplot(allairports_allpopu_bystat_df, aes(fill=airportcount, y=airportcount, x=State)) + ggtitle("Total Airport Count in each State ") +   geom_bar( stat="identity") + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + geom_point()</span>     
+<img src="img\g1.png" alt="W3Schools.com" width="700" height="500" > 
+
+##
+<span style="font-size:1.5em; color:#870818">Airport Type Count in each State......</span>  
+<span style="font-size:0.80em; color:Green"> >ggplot(allairports_types_allpopu_bystat_df, aes(fill=AirPortType, y=airportcount, x=State)) + ggtitle("Airport Type Count in each State ") + geom_bar( stat="identity") + theme(axis.text.x = element_text(angle = 70, hjust = 1))</span>     
+<img src="img\g2.png" alt="W3Schools.com" width="700" height="500" > 
+
+##
+<span style="font-size:1.5em; color:#870818">Population in each State (10k)......</span>  
+<span style="font-size:0.80em; color:Green"> >datn1 <- allpopu_bystat_df %>% mutate(Popu_10k = Population / 10000) %>% arrange(Popu_10k)
+ggplot(data=datn1, aes(y=Popu_10k,x=Region,  colour=Region)) + theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position="none") + 
+ geom_point() +
+   geom_bar(stat="identity") +
+ggtitle("Population in each State (10k )")</span>     
+<img src="img\g3.png" alt="W3Schools.com" width="700" height="500" > 
