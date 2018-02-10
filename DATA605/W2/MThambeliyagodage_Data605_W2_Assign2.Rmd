@@ -1,0 +1,264 @@
+---
+title: "MThambeliyagodage_Data605_W2_Assign2"
+author: "Matheesha Thambeliyagodage"
+date: "February 10, 2018"
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+##  <span style="color:Green"> Problem set 1 </span>
+
+### <span style="color:Green">Part (1)   </span>
+
+#### <span style="color:blue"> Show That $\begin{aligned} A^tA \neq  AA^t \end{aligned}$ in general. (Proof and demonstration.) </span>
+**Demonstration:**
+
+$$ \begin{aligned}
+      \text{Lets Consider the Matrix A = } 
+        \begin{bmatrix} 1 & 0  & 3 & \\2  & -4  & 2\\1 & -3  & 2\end{bmatrix} \text{We know that } 
+        A^T = \begin{bmatrix} 1 & 2  & 1 & \\0  & -4  & -3\\3 & 2  & 2\end{bmatrix} 
+    \end{aligned}
+$$
+
+```{r}
+A <- matrix(c(1,0,3,2,-4,2,1,-3,2), nrow=3, byrow=TRUE)
+At <- t(A)
+A
+At
+```
+```{r}
+# Multiplying A by its transpose we get 3x3
+A %*% At
+
+```
+```{r}
+# Multiplying transpose At by A we get 3x3
+At %*% A 
+
+```
+
+\begin{aligned}
+      \text{Then} 
+        A^TA = \begin{bmatrix} 10 & 8  & 7 \\8  & 24  & 18\\7 & 18  & 14\end{bmatrix} 
+        \text{and} 
+        AA^T = \begin{bmatrix} 6 & -11  & 9 \\-11  & 25  & -14\\9 & -14  & 17\end{bmatrix}
+    \end{aligned}
+<span style="color:	#DC143C"> From the above it is obvious that  $\begin{aligned} A^tA \neq  AA^t \end{aligned}$ </span>
+
+**Prof:**
+
+\begin{aligned}
+      \text{Lets Consider the Matrix A with i rows and j columns where } \begin{aligned} i\neq j \end{aligned} =
+\begin{bmatrix}  a_{1,1} & a_{1,2} &...... &a_{1,j} \\
+                         a_{2,1} & a_{2,2} &...... & a_{2,j}\\
+                         a_{3,1} & a_{3,2} &...... & a_{3,j}\\
+                         . & . &...... & .\\
+                         . & . &...... & .\\
+                         a_{i,1} & a_{i,2} &...... & a_{i,j}\\
+                           
+\end{bmatrix}
+\end{aligned}
+
+
+
+\begin{aligned}
+      \text{Transpose of Matrix A with j rows and i columns where  } \begin{aligned} j\neq i is A^T_{(ji)} \end{aligned} 
+ = \begin{bmatrix}  a_{1,1} & a_{2,1} &...... &a_{i,1} \\
+                a_{1,2} & a_{2,2} &...... & a_{i,2}\\
+                a_{1,3} & a_{2,3} &...... & a_{i,3}\\
+                . & . &...... & .\\
+                . & . &...... & .\\
+                a_{1,j} & a_{2,j} &...... & a_{j,i}\\
+                           
+\end{bmatrix}
+\end{aligned}
+
+
+$$
+  \begin{aligned} A{(ij)}A^t{(ji)} \end{aligned}\text{will result the matrix} \begin{aligned} AA^T{(ij)} \end{aligned}
+$$
+$$
+\begin{aligned} A^t{(ji)}  A{(ij)} \end{aligned}\text{will result the matrix} \begin{aligned} A^TA{(ji)} \end{aligned}
+$$
+<span style="color:	#DC143C"> It is obvious that =>   $\begin{aligned} A{(ij)} A^t{(ji)} \neq A^t{(ji)}A{(ij)} \end{aligned}$ </span>
+
+#### Example consider 4 x 5 matrix
+```{r}
+A = matrix(c(1,3,2,1, 1,2,1,1, 1,1,0,1, 1,2,2,1, 3,4,1,3), nrow=4, ncol=5)
+A
+```
+```{r}
+#transpose of matrix A, generates 5 X 4
+tA = t(A)
+tA
+```
+```{r}
+#Create 4 X 4 matrix
+A%*%tA
+```
+```{r}
+#Create 5 X 5 matrix
+tA%*%A
+```
+#### Outputs are different
+ 
+### <span style="color:Green"> Part (2) </span>
+
+#### <span style="color:blue">  For a special type of square matrix A, we get $\begin{aligned} A^tA =  AA^t \end{aligned}$ Under what conditions could this be true? (Hint: The Identity matrix I is an example of such a matrix).
+</span>
+
+#### When the matrix is symmetrical square matrix $\begin{aligned} A^tA =  AA^t \end{aligned}$
+**Prof:**
+```{r}
+# Symmetrical 4 X 4 matrix 
+A = matrix(c(9,1,3,6, 1,11,7,6, 3,7,4,1, 6,6,1,10), nrow=4, ncol=4)
+A
+```
+```{r}
+#transpose of matrix A  is similar to A
+tA = t(A)
+tA
+```
+```{r}
+#matrix multiplication
+A%*%tA
+```
+```{r}
+#matrix multiplication
+tA%*%A
+```
+<span style="color:	#DC143C"> It is obvious that for Symmetrical matrix  =>   $\begin{aligned} A{(ii)} A^t{(ii)} = A^t{(ii)}A{(ii)} \end{aligned}$ </span>
+
+
+#### When the matrix is identical $\begin{aligned} I^tI =  II^t \end{aligned}$
+**Prof:**
+```{r}
+# Identical 4 X 4 matrix 
+A = diag(4)
+A
+```
+```{r}
+# Identical 4 X 4 matrix 
+At = t(A)
+At
+```
+```{r}
+#matrix multiplication
+A%*%At
+```
+```{r}
+#matrix multiplication
+At%*%A
+```
+
+<span style="color:	#DC143C"> It is obvious that for Identical matrix  =>   $\begin{aligned} A{(ij)} A^t{(ji)} = A^t{(ji)}A{(ij)} \end{aligned}$ </span>
+
+##  <span style="color:Green"> Problem set 2 </span>
+
+### <span style="color:Green">Part (1)   </span>
+Matrix factorization is a very important problem. There are supercomputers built just
+to do matrix factorizations. Every second you are on an airplane, matrices are being
+factorized. Radars that track ights use a technique called Kalman Filtering. At the heart
+of Kalman Filtering is a Matrix Factorization operation. Kalman Filters are solving linear
+systems of equations when they track your Fight using radars.
+
+**Write an R function to factorize a square matrix A into LU or LDU, whichever you
+prefer.**
+The function factorize checks for the size of a square matrix, and then factorizes it into LU.
+
+```{r}
+factorizeLU <- function(A) {
+  # Check that A is square
+  if (dim(A)[1]!=dim(A)[2]) {
+    return(NA)
+  }
+  
+  U <- A
+  n <- dim(A)[1]
+  L <- diag(n)
+  
+  # If dimension is 1, then U=A and L=[1]
+  if (n==1) {
+    return(list(L,U))
+  }
+  
+  # Loop through the lower triangle (by rows and columns)
+  # Determine multiplier for each position and add it to L
+  for(i in 2:n) {
+    for(j in 1:(i-1)) {
+      multiplier <- -U[i,j] / U[j,j]
+      U[i, ] <- multiplier * U[j, ] + U[i, ]
+      L[i,j] <- -multiplier
+    }
+  }
+  return(list(L,U))
+}
+```
+
+### Demonstration
+
+#### Example 1
+
+```{r}
+A <- matrix(c(1,4,-3,-2,8,5,3,4,7), nrow=3, byrow=TRUE)
+LU <- factorizeLU(A)
+L<-LU[[1]]  
+U<-LU[[2]]
+
+A
+```
+```{r}
+L
+```
+
+```{r}
+U
+```
+```{r}
+L %*% U
+```
+```{r}
+A == L %*% U
+```
+
+```{r}
+A <- matrix(c(2,1,6,8),nrow=2, byrow = T)
+
+LU <- factorizeLU(A)
+L<-LU[[1]]  
+U<-LU[[2]]
+A
+L
+U
+A == L %*% U
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
