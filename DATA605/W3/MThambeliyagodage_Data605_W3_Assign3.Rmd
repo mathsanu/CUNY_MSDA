@@ -1,0 +1,310 @@
+---
+title: "MThambeliyagodage_Data605_W3_Assign3"
+author: "Matheesha Thambeliyagodage"
+date: "February 18, 2018"
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+---
+
+##  <span style="color:Green"> Problem set 1 </span>
+### Q1
+#### <span style="color:Green">What is the rank of the matrix A?</span>
+
+$$ \begin{aligned}
+           \begin{bmatrix} 1 & 2 & 3 & 4 \\
+                        -1 & 0 & 1 & 3 \\
+                        0 & 1 & -2 & 1 \\
+                        5 & 4 & -2 & -3
+        \end{bmatrix} 
+    \end{aligned}
+$$
+```{r}
+require(Matrix)
+A <-  matrix(c(1,2,3,4,-1,0,1,3,0,1,-2,1,5,4,-2,-3), ncol = 4,byrow = T)
+rankMatrix(A)
+```
+#### <span style="color:Red">The the rank of the matrix A is 4 </span>
+### Q2
+#### <span style="color:Green">Given an mxn matrix where m > n, what can be the maximum rank? The mini-
+mum rank, assuming that the matrix is non-zero?</span>
+
+* let A be an mxn matrix.  Then the row rank of A is equal
+to the maximum number of linear independent row vectors of A. 
+Hence the row-rank of mxn matrix is at most m.
+
+* Similarly, the column-rank of A is the maximum number of linear 
+independent columns of A. Hence the column-rank of A is at most n.
+
+* Since for any matrix A mxn over field F, the row-rank = column-rank. Therefore
+to be the common value of row-rank A and column-rank A, clearly rank A has to be 
+equal or less of  Min (m,n) for any mxn matrix
+
+* From the above, for any m x n matrix, if m is greater than n, then the maximum rank of the matrix is m.
+and if m is less than n, then the maximum rank of the matrix is n.
+
+* The rank of a matrix would be zero only if the matrix had no elements. 
+However, If a matrix had even one element, its minimum rank would be one.
+
+### Q3
+#### <span style="color:Green">What is the rank of matrix B?</span>
+$$ \begin{aligned}
+           \begin{bmatrix} 1 & 2 & 1 \\
+                        3 & 6 & 3 \\
+                        2 & 4 & 1 
+            \end{bmatrix} 
+    \end{aligned}
+$$
+```{r}
+B <-  matrix(c(1, 2, 1, 3, 6, 3, 2, 4, 2), ncol = 3, byrow = T)
+rankMatrix(B)
+```
+#### <span style="color:Red">The the rank of the matrix B is 1 </span>
+## Problem set 2
+* Compute the eigenvalues and eigenvectors of the matrix A. You'll need to show your
+work. You'll need to write out the characteristic polynomial and show your solution.
+
+$$ A = \begin{aligned}
+           \begin{bmatrix} 1 & 2 & 3 \\
+                        0 & 4 & 5 \\
+                        0 & 0 & 6 
+            \end{bmatrix} 
+    \end{aligned}
+$$
+$$ \text{ Definition: A scalar} \lambda  \text{ is called an eigenvalue of the n × n matrix A is there is a nontrivial solution
+x of Ax =} \lambda x \\ \text{ . 
+Such an x is called an eigenvector corresponding to the eigenvalue} \lambda.\\
+\text{ A scalar} \lambda \text{ is an eigenvalue of an n×n matrix A if and only if} \lambda \text{ satisfies the characteristic equation.}\\
+ det( A-\lambda I) = 0
+$$ 
+$$
+\lambda I = \begin{aligned}
+           \begin{bmatrix} \lambda & 0 & 0 \\
+                        0 & \lambda & 0 \\
+                        0 & 0 & \lambda 
+            \end{bmatrix} 
+\end{aligned}
+$$
+$$
+A-\lambda I = \begin{aligned}
+          \begin{bmatrix} 1 & 2 & 3 \\
+                        0 & 4 & 5 \\
+                        0 & 0 & 6 
+            \end{bmatrix} 
+            -
+           \begin{bmatrix} \lambda & 0 & 0 \\
+                        0 & \lambda & 0 \\
+                        0 & 0 & \lambda 
+            \end{bmatrix} 
+            =
+            \begin{bmatrix} 1-\lambda & 2 & 3 \\
+                        0 & 4-\lambda & 5 \\
+                        0 & 0 & 6 -\lambda 
+            \end{bmatrix} 
+            = 0
+\end{aligned}
+$$
+* We can calculate the characteristic polymomial to be:
+
+$$
+\begin{aligned} Det(A-\lambda I) &=  (\lambda -1)((\lambda -4)(\lambda -6) -0) + 2((0-0) -3(0-0)) = 0\\
+               & = \lambda^3 - 11\lambda^2 + 34\lambda - 24 \\ &= (\lambda -1)(\lambda -4)(\lambda-6)\\
+               & = 0 \end{aligned}
+$$
+$$ \text{Setting this equal to 0 and solving for} \lambda  \text{ we get that } \lambda \text{ = 1, 4,6.  
+These are the three eigenvalues of A.}
+$$
+
+#### <span style="color:Green"> Calculate the eigenvectors of A using $\lambda$  </span>
+
+Now, lets plug in each value of $\lambda$ into the matrix:
+
+<span style="color:Green"> $\lambda = 1$ </span>
+------------
+
+$( \lambda I_3 - A ) = 
+\left[ {\begin{array}{ccc}
+0 & -2 & -3\\
+0 & -3 & -5\\
+0 & 0 & -5\\
+\end{array} } \right]$
+
+```{r}
+
+A1 <- matrix(c(0,0,0,-2,-3,0,-3,-5,-5),nrow=3)
+
+# eliminate A1[2,3] by subtracting row 3 from row 2
+# eliminate A1[1,3] by subtracting 3/5 * row 3 from row 
+
+A1[2,] <- A1[2,] - A1[3,]
+
+A1[1,] <- A1[1,] - (3/5)*A1[3,]
+
+A1
+
+```
+
+```{r}
+# eliminate A1[1,2] by subtracting (2/3)*A1[2,]
+
+A1[1,] <- A1[1,] - (2/3)*A1[2,]
+
+A1
+
+```
+
+```{r}
+
+# Get matrix into reduced row echelon form by making pivots = 1
+# Then move the zero rows to the bottom
+
+A1[2,] <- A1[2,]/-3
+A1[3,] <- A1[3,]/-5
+
+A1 <- A1[c(2,3,1),]
+
+```
+
+$( \lambda I_3 - A )v = 
+\left[ {\begin{array}{ccc}
+0 & 1 & 0\\
+0 & 0 & 1\\
+0 & 0 & 0\\
+\end{array} } \right]
+\left[ {\begin{array}{c}
+v_1\\
+v_2\\
+v_3\\
+\end{array} } \right]$
+
+$v_2 = 0 \\ v_3 = 0$
+
+Let $v_1 = t$
+
+$E_{\lambda = 1} = t \left[ {\begin{array}{c}
+1\\
+0\\
+0\\
+\end{array} } \right]$
+
+where $t$ is real
+
+***
+
+<span style="color:Green"> $\lambda = 4$ </span>
+------------
+
+
+$( \lambda I_3 - A ) = 
+\left[ {\begin{array}{ccc}
+3 & -2 & -3\\
+0 & 0 & -5\\
+0 & 0 & -2\\
+\end{array} } \right]$
+
+```{r}
+
+A4 <- matrix(c(3,0,0,-2,0,0,-3,-5,-2),nrow=3)
+
+# Eliminate A4[2,3] by subtracting (5/2) * row 3 from row 2
+# Eliminate A4[1,3] by subtracting (3/2) * row 3 from row 1
+
+A4[2,] <- A4[2,] - (5/2)*A4[3,]
+A4[1,] <- A4[1,] - (3/2)*A4[3,]
+
+A4
+
+```
+
+```{r}
+
+# Divide row 1 by 3 to make the pivot 1
+# Divide row 3 by -2 to make the pivot 1
+# Move the zero row to the bottom
+
+A4[1,] <- A4[1,]/3
+A4[3,] <- A4[3,]/-2
+
+A4 <- A4[c(1,3,2),]
+
+
+```
+
+$( \lambda I_3 - A )v = 
+\left[ {\begin{array}{ccc}
+1 & -\frac{2}{3} & 0\\
+0 & 0 & 1\\
+0 & 0 & 0\\
+\end{array} } \right]
+\left[ {\begin{array}{c}
+v_1\\
+v_2\\
+v_3\\
+\end{array} } \right]$
+
+$v_1 -\frac{2}{3}v_2 = 0 \\ v_3 = 0$
+
+let $v_2 = t$
+
+So:
+$\frac{2}{3}t = v_1\\$
+
+$E_{\lambda = 4} = t \left[ {\begin{array}{c}
+\frac{2}{3}\\
+1\\
+0\\
+\end{array} } \right]$
+
+Where t is real
+
+***
+
+<span style="color:Green"> $\lambda = 6$ </span>
+------------
+
+
+```{r}
+
+A6 <- matrix(c(5,0,0,-2,2,0,-3,-5,0),nrow=3)
+
+# Eliminate A6[1,2] by subtracting -1 * row 2
+
+A6[1,] <- A6[1,] + A6[2,]
+
+# Divide Row 1 by 5 and row 2 by 2 to make the pivots 1
+
+A6[1,] <- A6[1,]/5
+A6[2,] <- A6[2,]/2
+
+A6
+
+```
+
+$( \lambda I_3 - A )v = 
+\left[ {\begin{array}{ccc}
+1 & 0 & -1.6\\
+0 & 1 & -2.5\\
+0 & 0 & 0\\
+\end{array} } \right]
+\left[ {\begin{array}{c}
+v_1\\
+v_2\\
+v_3\\
+\end{array} } \right]$
+
+$v_1 - 1.6v_3 = 0 \\ v_2 - 2.5v_3 = 0$
+
+let $v_3 = t$
+
+So
+
+$V_1 = 1.6t \\ v_2 = 2.5t$
+
+$E_{\lambda = 6} = t \left[ {\begin{array}{c}
+1.6\\
+2.5\\
+1\\
+\end{array} } \right]$
