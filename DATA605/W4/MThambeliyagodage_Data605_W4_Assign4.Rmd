@@ -1,0 +1,177 @@
+---
+title: "MThambeliyagodage_Data605_W4_Assign4"
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+  html_notebook: 
+    toc: yes
+  pdf_document: 
+    toc: yes
+  word_document: 
+    toc: yes
+---
+
+##  <span style="color:Green"> Problem set 1 </span>
+
+In this problem, we'll verify using R that SVD and Eigenvalues are related as worked
+out in the weekly module. Given a $3 \times 2$ matrix $A$
+
+$$A = \left[ {\begin{array}{ccc}
+1 & 2 & 3\\
+-1 & 0 & 4\\
+\end{array} } \right]$$
+
+```{r}
+A <- matrix(c(1,-1,2,0,3,4),nrow=2)
+A
+```
+
+* Write code in R to compute $X = AA^T$
+
+```{r}
+X <- A %*% t(A)
+X
+```
+
+and $Y = A^T A$
+
+```{r}
+Y <- t(A) %*% A
+Y
+```
+
+* Compute the Eigenvalues and Eigenvectors for X and Y. This will be done with R built-in functions.
+
+```{r}
+# Eigen Values and Vectors for X
+x.val <- eigen(X)$values
+x.val
+```
+```{r}
+x.vect <- eigen(X)$vectors
+x.vect
+```
+```{r}
+# Eigen Values and Vectors for Y
+y.eigen <- eigen(Y)
+y.val <- y.eigen$values
+y.val
+```
+```{r}
+y.vect <-eigen(Y)$vector
+y.vect
+```
+Then, compute the left-singular, singular values, and right-singular vectors of $A$ using
+the svd command. Examine the two sets of singular vectors and show that they are indeed
+eigenvectors of $X$ and $Y$. In addition, the two non-zero eigenvalues (the 3rd value will
+be very close to zero, if not zero) of both $X$ and $Y$ are the same and are squares of the
+non-zero singular values of A.
+
+```{r}
+#singular values or diagnals
+A.svd <- svd(A)$d 
+A.svd
+
+```
+```{r}
+#left singular
+LS <- svd(A)$u
+LS
+``` 
+```{r}
+#Multiplying with -1 to aligh with above eign vector x.vect
+LS[,1] <- -LS[,1]
+LS
+```
+
+
+
+```{r}
+#right singular with 3 vectors
+RS <- svd(A, nv = 3)$v
+RS
+```
+```{r}
+#Multiplying with -1 to aligh with above eign vector y.vect
+RS[,1] <- -RS[,1]
+RS[,3] <- -RS[,3]
+RS
+```
+
+
+* When tested with all.eqal, I see that two matrices have equal values
+```{r}
+all.equal(y.vect, RS)
+```
+```{r}
+all.equal(x.vect, LS)
+```
+```{r}
+C <- matrix(c(1,2,4,2,-1,3,4,0,1), nrow=3, ncol=3, byrow = TRUE)
+solve(C)
+```
+
+
+
+##  <span style="color:Green"> Problem set 2 </span>
+
+Using the procedure outlined in section 1 of the weekly handout, write a function to
+compute the inverse of a well-conditioned full-rank square matrix using co-factors. In order
+to compute the co-factors, you may use built-in commands to compute the determinant.
+Your function should have the following signature:
+
+$B$ = myinverse($A$)
+
+where $A$ is a matrix and B is its inverse and $A \times B = I$. The off-diagonal elements of $I$
+should be close to zero, if not zero. Likewise, the diagonal elements should be close to 1, if
+not 1. Small numerical precision errors are acceptable but the function myinverse should
+be correct and must use co-factors and determinant of $A$ to compute the inverse.
+Please submit PS1 and PS2 in an R-markdown document with your first initial and last
+name.
+
+
+```{r}
+myinverse <- function(A)
+{
+
+### This function will compute the inverse of matrix using co-factors.
+### Input validation will be done for the number of columns and rows for squar matrix.
+### In order to determine the co-factors the built-in determinant function in r will be used.
+
+  row.A = nrow(A)
+  col.A = ncol(A)
+  
+  if (NROW(A) == NCOL(A))
+  {         
+            if (det(A) == 0) {stop("Determinant is 0. Inverse does not exist")} #check to make sure that determinant is not 0
+          else
+              coeff <-  diag(NA, row.A, col.A)
+              for(i in 1:row.A) {
+                    for(j in 1:col.A){
+                      coeff[i, j] <- (-1)^(i+j) * det(A[-i, -j]) #looping through for cofactor matrix
+                }
+           }
+        B <- ((t(coeff) / det(A))) #this is from $$A^-1 = C^T/det(A)$$(c is coeff in this case)
+        return(B)
+   }
+   stop('Your matrix is not a well-conditioned or full-rank or square matrix')
+}
+
+
+
+#Testing Function 
+C <- matrix(c(1,2,4,2,-1,3,4,0,1), nrow=3, ncol=3, byrow = TRUE)
+C
+invC <- myinverse(C)
+invC
+
+```
+```{r}
+# Validating my function with the R builtin function solve()
+solve(C)
+```
+
+
