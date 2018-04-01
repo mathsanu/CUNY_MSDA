@@ -1,0 +1,134 @@
+---
+title: "MThambeliyagodage_Data605_W9_Assign9"
+author: "MThambeliyagodage"
+date: "April 1, 2018"
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: no
+  html_notebook: 
+    toc: yes
+  pdf_document: 
+    toc: yes
+  word_document: 
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Data 605 Assignment 9
+
+## Problem 1 
+
+####Page 363 # 11
+
+The price of one share of stock in the Pilsdorff Beer Company (see Exercise
+8.2.12) is given by $Y_n$ on the $n^{th}$ day of the year. Finn observes that
+the differences $X_n = Y_{n+1}-Y_{n}$ appear to be independent random variables
+with a common distribution having mean $\mu^2 = 0$ and variance $\sigma^2 = 1/4$. If
+$Y_{1} = 100$, estimate the probability that $Y_{365}$ is
+
+### $\scriptsize(a) \geqslant 100.$
+.$$ P(y_{365} \geqslant 100) $$
+```{r}
+std = sqrt(364/4)
+pnorm(100-100, mean = 0, sd = std, lower.tail = FALSE)
+```
+### $\scriptsize(b) \geqslant 110.$
+.$$ P(y_{365} \geqslant 110) $$
+```{r}
+pnorm(110-100, mean = 0, sd = std, lower.tail = FALSE)
+```
+### $\scriptsize(b) \geqslant 120.$
+.$$ P(y_{365} \geqslant 120) $$
+```{r}
+pnorm(120-100, mean = 0, sd = std, lower.tail = FALSE)
+```
+## Problem 2
+Calculate the expected value and variance of the binomial distribution using the moment generating function.
+
+The probability mass function for the binomial distribution is:
+
+\(g(t) = E(e^{tx}) = \sum^n_{x=0} e^{tx}f(x)\)
+
+Binomial Distribution function:
+
+\(f(x) = \left( \begin{array}{c} n \\ x \end{array} \right) p^x(1-p)^{n-x}\)
+
+Substitute f(x)in g(t):
+
+\(g(t) = \sum^n_{j=0} e^{tx}\left( \begin{array}{c} n \\ x \end{array} \right) p^x(1-p)^{n-x}\)
+
+\(g(t) = \sum^n_{j=0} \left( \begin{array}{c} n \\ x \end{array} \right) (pe^t)^x(1-p)^{n-x}\)
+
+\(g(t) = ((1-p) + pe^t)^n\)
+
+First derivative:
+
+\(g'(t) = \frac{dg(t)}{dt} = n((1-p) + pe^t)^{n-1}pe^t \)
+
+Find expected value E(x) by 1st derivative of MGF at t=0:
+
+\(E(x) = \frac{dg(0)}{dt} = np((1-p) + p)^{n-1} = np\)
+
+Find variance V(x) by 2nd derivative of MGF at t=0:
+
+\(g'(t) = npe^t((1-p) + pe^t)^{n-1} \)
+
+\(g''(t) = \frac{d^2M_x(t)}{dt^2} = npe^t((n-1)((1-p) + pe^t)^{n-2}pe^t) + g'(t)\)
+
+\(g''(t) = npe^t((n-1)((1-p) + pe^t)^{n-2}pe^t) + g'(t)\)
+
+when t=0:
+
+\(g''(0) = np(n-1)[1-p+pe^0]^{n-2}pe^0e^0 + g'(t)\)
+
+\(g''(0) = np^2(n-1) + g'(t) = np^2(n-1) + np\)
+
+Variance: \(V(x) = E(x^2) - (E(x))^2\)
+
+\(V(x) = np^2(n-1) + np - n^2p^2 = n^2p^2 -np^2 +np - n^2p^2 = np - np^2 = np(1-p)\)
+
+## Problem 3 
+Calculate the expected value and variance of the exponential distribution using the moment generating function.
+
+Moment generating function:
+
+\(g(t) = E(e^{tx}) = \sum^\infty_{x=0} e^{tx}f(x))\)
+
+Exponential distribution function:
+
+\(f(x) = \lambda e^{-\lambda x}\)
+
+Substitute f(x)in g(t):
+
+\(g_x(t) = \int_{0}^{\infty} e^{tx}\lambda e^{-\lambda x} dx\)
+
+\(g_x(t) = \lambda \int_{0}^{\infty}e^{(t-\lambda) x} dx)\)
+
+\(g_x(t) = \frac{\lambda}{t-\lambda}\)
+
+First derivative:
+
+\(g_x^{'}(t) = \frac{\lambda}{(\lambda - t)^2}\)
+
+Find expected value E(x) by 1st derivative of MGF at t=0:
+
+\(E(x) = {g_x}^{'}(0) = \frac{\lambda}{(\lambda)^2} = \frac{1}{\lambda}\)
+
+Find variance V(x) by 2nd derivative of MGF at t=0:
+
+\(g_x^{''}(t) = \frac{2\lambda}{(\lambda - t)^3}\)
+
+\(E(X^2) = {g_x}^{''}(0) = \frac{2\lambda}{\lambda^3} = \frac{2}{\lambda^2}\)
+
+Variance: \(V(x) = E(x^2) - (E(x))^2\)
+
+\(V(X) = \frac{2}{\lambda^2} - \frac{1}{\lambda^2} = \frac{1}{\lambda^2}\)
+ 
+
+
+
