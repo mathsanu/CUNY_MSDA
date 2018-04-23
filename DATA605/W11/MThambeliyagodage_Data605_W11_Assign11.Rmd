@@ -1,0 +1,131 @@
+---
+title: "MThambeliyagodage_Data605_W11_Assign11"
+author: "Matheesha Thambeliyagodage"
+date: "April 22, 2018"
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+  pdf_document: 
+    toc: yes
+  word_document: 
+    toc: yes
+  html_notebook: 
+    toc: yes
+---
+```{r}
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Data 605 Assignment 11
+
+## Q1
+Using the `cars` dataset in R, build a linear model for stopping distance as a function of speed and
+replicate the analysis of your textbook chapter 3 (visualization, quality evaluation of the model, and
+residual analysis).
+```{r}
+data(cars)
+head(cars)
+summary(cars)
+colnames(cars)
+ncol(cars)
+nrow(cars)
+```
+
+## Data Visualization:
+```{r}
+cars_speed_df = arrange(cars, speed)
+
+ggplot(data=cars_speed_df, aes(cars_speed_df$speed)) + 
+  geom_histogram(aes(fill = ..count..)) +
+  scale_fill_gradient("Count", low = "blue", high = "pink") +
+  labs(title = "Historgram - Speed") +
+  labs(x = "speed") +
+  labs(y = "Count")
+```
+
+```{r}
+cars_dist_df = arrange(cars, dist)
+
+ggplot(data=cars_dist_df, aes(cars_dist_df$dist)) + 
+  geom_histogram(aes(fill = ..count..)) +
+  scale_fill_gradient("Count", low = "blue", high = "purple") +
+  labs(title = "Historgram - Distance") +
+  labs(x = "dist") +
+  labs(y = "Count")
+```
+## Statistical Analysis:
+
+### Plot of two variables Speed & distance
+The Speed is **explanatory** variable and stopping distance is the **response**.
+```{r}
+plot(cars$speed, cars$dist, xlab='Speed (mph)', ylab='Stopping Distance (ft)', 
+     main='Stopping Distance vs. Speed')
+```
+
+### Display the Linear Model
+
+```{r}
+cars_lm <- lm(cars$dist ~ cars$speed)
+cars_lm
+
+plot(cars$speed, cars$dist, xlab='Speed (mph)', ylab='Stopping Distance (ft)', 
+     main='Stopping Distance vs. Speed')
+abline(cars_lm)
+```
+
+The above appears some correlation between two variables, but let us evaluate the linear model we have. 
+
+```{r}
+summary(cars_lm)
+```
+
+The median value of the residuals is somewhat close to zero and quartiles and min/max values are roughly the same magnitude. The standard error of the `speed` variable is more than 9 times smaller than the corresponding coefficient. There should not be a lot of variability in this coefficient. On the other hand, the difference between the intercept estimate and standard error is less significant, so there may be more variability. The `speed` coefficient is highly significant. The intercept coefficient is less significant, but it is still relevant depending on the confidence interval desired. Finally, $R^2$ explains about 65.11% of the data's variation.
+
+```{r}
+plot(cars_lm$fitted.values, cars_lm$residuals, xlab='Fitted Values', ylab='Residuals')
+abline(0,0)
+```
+
+It is possible to say that the outlier values do not show the same variance of the residuals; however, it is not very clear. I think it is reasonable to continue with the analysis and assume similar variance of residuals.
+
+```{r}
+qqnorm(cars_lm$residuals)
+qqline(cars_lm$residuals)
+```
+
+Althought again there are some problems at the outlier levels, the normal Q-Q plot of the residuals appears to follow the theoretical line. Residuals are reasonably normally distributed.
+
+### Conclusion
+
+I believe the linear model does a good job at explaining the data. There appears to be some slight curvature in the main plot and in the residuals plot, so I decided to try a simple quadratic model (see below). It has it's own problems - again varability of residuals is not constant enough, q-q plot has some deviations, coefficients are not very significant and $R^2$ is not increased by much. I don't think it's an improvement over a simplier linear model.
+
+#### Quadtratic Model
+
+```{r}
+speed <- cars$speed
+speed2 <- speed^2
+dist <- cars$dist
+  
+cars_qm <- lm(dist ~ speed + speed2)
+summary(cars_qm)
+
+speedvalues <- seq(0, 25, 0.1)
+predictedcounts <- predict(cars_qm,list(speed=speedvalues, speed2=speedvalues^2))
+
+plot(speed, dist, pch=16, xlab='Speed (mph)', ylab='Stopping Distance (ft)')
+lines(speedvalues, predictedcounts)
+
+plot(cars_qm$fitted.values, cars_qm$residuals, xlab='Fitted Values', ylab='Residuals')
+abline(0,0)
+
+qqnorm(cars_qm$residuals)
+qqline(cars_qm$residuals)
+```
