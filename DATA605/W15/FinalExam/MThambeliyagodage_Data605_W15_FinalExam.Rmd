@@ -1,0 +1,729 @@
+---
+title: "MThambeliyagodage_Data605_W15_FinalExam"
+author: "Matheesha Thambeliyagodage"
+date: "May 12, 2018"
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+  word_document: 
+    toc: yes
+  pdf_document: 
+    toc: yes
+  html_notebook: 
+    toc: yes
+---
+
+```{r libraries, warning=FALSE, message=FALSE, echo=FALSE}
+library(MASS)
+library(knitr)
+library(dplyr)
+library(DT)
+library(reshape)
+library(corrplot)
+library(Rmisc)
+library(RCurl)
+library(ggplot2)
+library(e1071)
+library(scales)
+library(cowplot)
+library(corrplot)
+library(Rmisc)
+library(FactoMineR)
+library(factoextra)
+library(MASS)
+
+```
+
+
+
+```{r load-traindata}
+df <- read.csv("https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA605/W15/FinalExam/train.csv")
+```
+
+##Introduction
+
+Below is the dataset of house prices available from Kaggle.com. The dataset has 1459 observations of houses in Ames, Iowa, and 79 variables potentially contributing to the house sale price.
+
+The full dataset and dictionary are available at:
+https://www.kaggle.com/c/house-prices-advanced-regression-techniques/data
+
+
+```{r viewdata, eval=TRUE}
+#kable(head(df))
+datatable(df, options = list( pageLength = 5, lengthMenu = c(5, 10, 40),   initComplete = JS(
+    "function(settings, json) {",
+    "$(this.api().table().header()).css({'background-color': '#68080e', 'color': '#fff'});",
+    "}")), rownames=TRUE)
+```
+
+##Part 1: Variables
+
+*Pick one of the quanititative independent variables from the training data set (train.csv) , and define that variable as  X.   Make sure this variable is skewed to the right!  Pick the dependent variable and define it as  Y.*
+
+```{r testvar}
+#test variable
+X1<-df$YearBuilt
+Y1<-df$SalePrice
+# 
+# plot(X1,Y1)
+# hist(X1, col="pink", main="Histogram of YearBuilt")
+# hist(Y1, col="blue", main="Histogram of SalePrice")
+```
+
+```{r summary-plots}
+#chosen variable
+X<-df$YearBuilt
+Y<-df$SalePrice
+
+plot(X,Y, col="#1109f9", main="Scatterplot of Year Built and Sale Price", xlab = "Year Built", ylab="Sale Price")
+abline(lm(Y~X), col="yellow", lwd=3) # regression line (y~x) 
+
+hist(X, col="#9df909", main="Histogram of Year Built", xlab = "Year Built")
+hist(Y, col="#80cbc4", main="Histogram of Sale Price", xlab = "Sale Price")
+print("Summary of X variable: Year Built")
+summary(X)
+print("Summary of Y variable: Sale Price")
+summary(Y)
+```
+
+##Part 2: Probability
+
+*Probability.   Calculate as a minimum the below probabilities a through c.  Assume the small letter "x" is estimated as the 1st quartile of the X variable, and the small letter "y" is estimated as the 1st quartile of the Y variable.  Interpret the meaning of all probabilities.  In addition, make a table of counts as shown below.*
+
+a. $$p_1 =p(X>x | Y>y) $$
+
+Given an above median sale price, the probability that a house has a year built greater than the third quartile.
+
+```{r p1}
+XQ1<-quantile(X, probs=0.25)  #1st quartile of X variable
+YQ1<-quantile (Y, probs=0.25) #1st quartile of Y variable
+
+n<-(nrow(df))
+yearbuilt<-as.numeric(df$YearBuilt)
+saleprice<-as.numeric(df$SalePrice)
+
+nYQ1<-nrow(subset(df,saleprice>YQ1))
+
+
+p1<-nrow(subset(df, yearbuilt > XQ1 & saleprice>YQ1))/nYQ1
+p1
+```
+
+b. $$p_2 = p(X>x , Y>y) $$
+
+Given the complete data set, the probability that a house has a year built greater than the third quartile and a sale price above median value.
+
+```{r p2}
+p2<-nrow(subset(df, yearbuilt > XQ1 & saleprice>YQ1))/n
+p2
+```
+
+c. $$p_3 =p(X<x | Y>y) $$
+
+Given an above median selling price, the probability that a house has a year built less than [less than or equal to] the third quartile.
+
+```{r p3}
+p3<-nrow(subset(df, yearbuilt <=XQ1 & saleprice>YQ1))/nYQ1
+p3
+```
+
+```{r tblcounts1}
+c1<-nrow(subset(df, yearbuilt <=XQ1 & saleprice<=YQ1))/n
+c2<-nrow(subset(df, yearbuilt <=XQ1 & saleprice>YQ1))/n
+c3<-c1+c2
+c4<-nrow(subset(df, yearbuilt >XQ1 & saleprice<=YQ1))/n
+c5<-nrow(subset(df, yearbuilt >XQ1 & saleprice>YQ1))/n
+c6<-c4+c5
+c7<-c1+c4
+c8<-c2+c5
+c9<-c3+c6
+```
+
+
+```{r tblcounts2}
+dfcounts<-matrix(round(c(c1,c2,c3,c4,c5,c6,c7,c8,c9),3), ncol=3, nrow=3, byrow=TRUE)
+colnames(dfcounts)<-c(
+"<=2d quartile",
+">2d quartile",
+"Total")
+rownames(dfcounts)<-c("<=3rd quartile",">3rd quartile","Total")
+
+print("Quartile Matrix by Percentage")
+dfcounts<-as.table(dfcounts)
+dfcounts
+
+print("Quartile Matrix by Count")
+dfvals<-round(dfcounts*1460,0)
+dfvals
+```
+
+##Part 3: Independence
+
+*Does splitting the training data in this fashion make them independent? Let A be the new variable counting those observations above the 1st quartile for X, and let B be the new variable counting those observations for the 1st quartile for Y.    Does P(A|B)=P(A)P(B)?   Check mathematically, and then evaluate by running a Chi Square test for association.*
+
+```{r papb}
+papb<-c4*c5
+print (paste0("p(A)*p(B)=", round(papb,5)))
+```
+
+$$p(A|B)=p(X>x|Y>y)=0.846$$
+
+$$p(A)*p(B)=0.00643$$
+
+$$p(A|B) != p(A)*p(B)$$
+
+```{r chisq, eval=TRUE}
+mat<-data.frame(df$YearBuilt,Y<-df$SalePrice)
+
+#chi_table<- table(mat2$X1, mat2$Y1)
+chisq.test(mat, correct=TRUE) 
+```
+
+We recieve a p value of < 2.2e-16. Therefore, we reject the null hypothesis. The values are significant and therefore our data is independent.
+
+##Part 4: Statistics
+
+Provide univariate descriptive statistics and appropriate plots for the training data set. Provide a scatterplot of X and Y. Derive a correlation matrix for any THREE quantitative variables in the dataset. Test the hypotheses that the correlations between each pairwise set of variables is 0 and provide a 92% confidence interval. Discuss the meaning of your analysis. Would you be worried about familywise error? Why or why not?
+
+###Generate descriptive statistics on the numerical variables in the training dataset.
+
+```{r numsummary}
+isnum <- sapply(df, is.numeric)
+dfnum<-df[ , isnum]
+summary(dfnum)
+```
+###scatterplot of X and Y
+Provide a scatterplot of X and Y. 
+Create density plot for SalePrice variable
+
+```{r}
+
+#Collect summary statistics
+SalePrice.mean <-mean(df$SalePrice)
+SalePrice.median <-median(df$SalePrice)
+SalePrice.mode <- as.numeric(names(sort(-table(df$SalePrice))))[1]
+SalePrice.sd <- sd(df$SalePrice)
+
+
+d_SalePrice <- density(df$SalePrice)
+plot(d_SalePrice, main="SalePrice Probabilities", ylab="Probability", xlab="SalePrice")
+polygon(d_SalePrice, col="red")
+abline(v = SalePrice.median, col = "green", lwd = 2)
+abline(v = SalePrice.mean, col = "blue", lwd = 2)
+abline(v = SalePrice.mode, col = "purple", lwd = 2)
+legend("topright", legend=c("median", "mean","mode"),col=c("green", "blue", "purple"), lty=1, cex=0.8)
+```
+```{r}
+
+#Collect summary statistics
+YearBuilt.mean <-mean(df$YearBuilt)
+YearBuilt.median <-median(df$YearBuilt)
+YearBuilt.mode <- as.numeric(names(sort(-table(df$YearBuilt))))[1]
+YearBuilt.sd <- sd(df$YearBuilt)
+
+
+d_YearBuilt <- density(df$YearBuilt)
+plot(d_YearBuilt, main="YearBuilt Probabilities", ylab="Probability", xlab="YearBuilt")
+polygon(d_YearBuilt, col="#68080e")
+abline(v = YearBuilt.median, col = "green", lwd = 2)
+abline(v = YearBuilt.mean, col = "blue", lwd = 2)
+abline(v = YearBuilt.mode, col = "purple", lwd = 2)
+legend("topright", legend=c("median", "mean","mode"),col=c("green", "blue", "purple"), lty=1, cex=0.8)
+```
+
+X = YearBuilt    
+Y = SalePrice  
+
+```{r, echo = F}
+
+
+ggplot(df, aes(x=YearBuilt, y=SalePrice)) + geom_point(shape=1)  + geom_smooth(method=lm) + 
+labs(x="YearBuilt", 
+                y = "House Sale Price ($)",  title= "YearBuilt vs. Sale Price") + scale_y_continuous(labels=comma)
+                
+
+```
+
+
+```{r echo =F}
+
+
+hist(df$SalePrice, breaks = 100, 
+     main = 'Histogram - SalePrice', xlab = 'SalePrice')
+
+hist(df$YearBuilt, breaks = 100, 
+     main = 'Histogram - YearBuilt', xlab = 'YearBuilt')
+
+```
+
+###Derive a correlation matrix for any THREE quantitative variables in the dataset.
+
+```{r echo=F}
+
+p2 <- ggplot(df, aes(x = X1stFlrSF)) + geom_dotplot(binwidth = 50) + labs(x="First Floor Sq Ft")
+
+p3 <- df %>% filter(X2ndFlrSF > 0 ) %>%
+      ggplot( aes(x = X2ndFlrSF)) + geom_dotplot(binwidth = 35) + labs(x="Second Floor Sq Ft")
+
+p4 <- ggplot(df, aes(x = GrLivArea)) + geom_dotplot(binwidth = 55) + labs(x="Above Ground Sq Ft")
+
+# show plots 
+
+plot_grid(p2, p3, p4, align='v')
+
+```
+
+---
+
+```{r echo = F}
+p5 <-df %>% filter(GarageArea > 0 ) %>%
+ggplot(aes(x = GarageArea)) + geom_dotplot(binwidth = 15) + labs(x="Garage Area Sq ft")
+
+p6 <-ggplot(df, aes(x = LotArea)) + geom_dotplot(binwidth = 15) + labs(x="Total LotArea ft")
+
+p7 <-ggplot(df, aes(x = TotalBsmtSF)) + geom_dotplot(binwidth = 50) + labs(x="Total Basement Sq ft") +scale_x_continuous(label=comma)
+
+
+p8 <-ggplot(df, aes(x = SalePrice)) + geom_dotplot(binwidth = 10000) +scale_x_continuous(label=comma)
+
+plot_grid(p5, p6, p7, p8,  align='h')
+
+```
+
+---
+
+
+```{r, echo = F}
+
+
+
+h1 <- ggplot(data=df, aes(x=factor(MSSubClass))) + stat_count() + xlab('Type of Building') + theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust =1))
+  
+h2 <-ggplot(data=df, aes(x=factor(BldgType))) + stat_count() + xlab('Building Type') + theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust =1))
+
+
+h3 <-ggplot(data=df, aes(x=factor(HouseStyle))) + stat_count() + xlab('Style of Dwelling') + theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust =1))
+
+plot_grid(h1, h2, h3, align='h')
+
+```
+
+---
+
+```{r, echo = F}
+#OverallQual: Rates the overall material and finish of the house
+#OverallCond: Rates the overall condition of the house
+
+h4 <- ggplot(data=df, aes(x=factor(OverallQual))) + stat_count() + xlab('Rating of House Quality') + theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust =1))
+  
+h5 <- ggplot(data=df, aes(x=factor(OverallCond))) + stat_count() + xlab('Rating of House Condition') + theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust =1))
+
+plot_grid(h4, h5, align='h')
+
+```
+
+---
+
+
+```{r, echo = F}
+
+
+
+h6 <- ggplot(data=df, aes(x=factor(BsmtFullBath))) + stat_count() + xlab('Number Full Bath - Basement') + theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust =1))
+  
+h7 <- ggplot(data=df, aes(x=factor(BsmtHalfBath))) + stat_count() + xlab('Number Half Bath - Basement') + theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust =1))
+
+h8 <- ggplot(data=df, aes(x=factor(FullBath))) + stat_count() + xlab('Number Full Bath - Above Grade') + theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust =1))
+  
+h9 <- ggplot(data=df, aes(x=factor(HalfBath))) + stat_count() + xlab('Number Half Bath - Above Grade') + theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust =1))
+
+plot_grid(h6, h7, h8, h9, align='h')
+
+
+```
+
+---
+
+
+```{r, echo = F}
+
+
+
+h10 <- ggplot(data=df, aes(x=factor(BedroomAbvGr))) + stat_count() + xlab('Above Grade Bedrooms') + theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust =1))
+
+h11 <- ggplot(data=df, aes(x=factor(KitchenQual))) + stat_count() + xlab('Kitchen Quality') + theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust =1))
+  
+h12 <- ggplot(data=df, aes(x=factor(GarageType))) + stat_count() + xlab('Garage Type') + theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust =1))
+
+
+plot_grid(h10, h11, h12, align='h')
+
+
+```
+
+###__Overall House Quality and Condition Compared to Sale Price__
+
+```{r, echo = F}
+
+
+df %>% select(OverallQual, SalePrice) %>% ggplot(aes(factor(OverallQual), SalePrice)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, hjust =1)) + xlab('Overall Quality') + scale_y_continuous(labels=comma)
+
+
+df %>% select(OverallCond, SalePrice) %>% ggplot(aes(factor(OverallCond), SalePrice)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, hjust =1)) + xlab('Overall Condition') + scale_y_continuous(labels=comma)
+
+```
+
+###__Above Ground Living Area and Sale Price__
+
+```{r echo = F}
+df$GrLivAreaRange <- 
+                       cut(df$GrLivArea, 
+                       breaks = c(-Inf, 999, 1999, 2999, 3999, 4999, Inf), 
+                       labels = c("0 - 999 Sq Ft", "1,000 - 1,999 Sq Ft", "2,000 - 2,999 Sq Ft", "3,000 - 3,999 Sq Ft", "4,000 - 4,999 Sq Ft", "5,000+"), 
+                       right = FALSE)
+
+df %>% select(GrLivAreaRange, SalePrice) %>% ggplot(aes(factor(GrLivAreaRange), SalePrice)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, hjust =1)) + xlab('Above Grade Living Area') + scale_y_continuous(labels=comma)
+
+```
+
+###__House Price Compared to Year Built__
+
+```{r echo = F}
+
+df$YearBuiltRange <- 
+cut(df$YearBuilt, 
+                       breaks = c(-Inf, 1899, 1909, 1919, 1929, 1939, 1949, 1959, 1969, 1979, 1989, 1999, 2009, Inf), 
+                       labels = c("Prior 1900", "1900s", "1910s", "1920s", "1930s", "1940s", "1950s", "1960s",
+                                  "1970s", "1980s", "1990s", "2000s", "2010s"), 
+                       right = FALSE)
+
+df %>% select(YearBuiltRange, SalePrice) %>% ggplot(aes(factor(YearBuiltRange), SalePrice)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, hjust =1)) + xlab('Decade') + scale_y_continuous(labels=comma)
+
+
+```
+
+### Barplots of Sale-related Variables:
+  
+
+```{r, echo = F}
+
+# SaleType: Type of sale
+s1 <- ggplot(data=df, aes(x=factor(MoSold))) + stat_count() + xlab('Month Sold') + theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust =1))
+
+#YrSold: Year Sold (YYYY)
+
+s2 <- ggplot(data=df, aes(x=factor(YrSold))) + stat_count() + xlab('Year Sold') + theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust =1))
+
+#SaleType: Type of sale
+
+s3 <- ggplot(data=df, aes(x=factor(SaleType))) + stat_count() + xlab('Sale Type') + theme_light() + 
+  theme(axis.text.x = element_text(angle = 90, hjust =1))
+  
+  
+# SaleCondition: Condition of sale
+  
+s4 <- ggplot(data=df, aes(x=factor(SaleCondition))) + stat_count() + xlab('Sale Condition') + theme_light() + 
+    theme(axis.text.x = element_text(angle = 90, hjust =1))
+
+
+plot_grid(s1, s2, s3, s4, align='h')
+  
+```
+
+
+#### Confidence interval
+*Provide a 95% CI for the difference in the mean of the variables.*
+
+```{r ttest}
+#t.test(x,y)
+t.test(df$YearBuilt, df$SalePrice)
+```
+
+#### Selective correlation matrix for chosen variables
+
+*Test the hypotheses that the correlations between each pairwise set of variables is 0 and provide a 92% confidence interval.Discuss the meaning of your analysis.*
+
+
+**YearBuilt vs SalePrice**
+```{r}
+
+
+myvars<-data.frame(df$BedroomAbvGr, df$SalePrice)
+#head(myvars) #view header
+cor(myvars)
+cor.test(df$BedroomAbvGr, df$SalePrice, conf.level = 0.92)
+t.test(df$BedroomAbvGr, df$SalePrice, conf.level = 0.92)
+
+mymx<-as.matrix(cor(myvars))
+```
+
+With a 92 percent confidence level, the correlation between Year Built and Sale Price is estimated to be between 0.48 and 0.55.
+
+
+
+**House Quality and Condition Compared to Sale Price**
+```{r mycorr}
+
+
+myvars<-data.frame(df$OverallQual, df$SalePrice)
+#head(myvars) #view header
+cor(myvars)
+cor.test(df$OverallQual, df$SalePrice, conf.level = 0.92)
+t.test(df$OverallQual, df$SalePrice, conf.level = 0.92)
+
+mymx<-as.matrix(cor(myvars))
+```
+With a 92 percent confidence level, the correlation between Year Built and Sale Price is estimated to be between 0.77 and 0.80.
+
+
+
+**Ground Living Area and Sale Price**
+```{r}
+
+
+myvars<-data.frame(df$GrLivArea, df$SalePrice)
+#head(myvars) #view header
+cor(myvars)
+cor.test(df$GrLivArea, df$SalePrice, conf.level = 0.92)
+t.test(df$GrLivArea, df$SalePrice, conf.level = 0.92)
+
+mymx<-as.matrix(cor(myvars))
+```
+
+With a 92 percent confidence level, the correlation between Year Built and Sale Price is estimated to be between 0.68 and 0.73.
+
+### Discuss the meaning of your analysis.
+** Would you be worried about familywise error? Why or why not?**
+
+The above analysis done 3 categorise using the data provided. 
+1.Bedrooms Above Ground vs SalePrice
+2.House Quality and Condition Compared to Sale Price
+3.Ground Living Area and Sale Price
+
+Regardless of the manufactured year I was triying to find some corallation between above factors . Some factos are moderately corralized and some are not.
+
+All above factors and independent and because of that I don't consern much familywise error rate.
+
+## Part 5: Linear Algebra and Correlation
+
+*Invert your 3 x 3 correlation matrix from above. (This is known as the precision matrix and contains variance inflation factors on the diagonal.) Multiply the correlation matrix by the precision matrix, and then multiply the precision matrix by the correlation matrix. Conduct LU decomposition on the matrix.*
+
+
+
+### Correlation Matrix, Precision Matrix, Identity Matrix
+
+```{r matrices}
+#my correlation matrix
+mymx
+
+#inverse of my correlation matrix, precision matrix
+ginvmymx<-ginv(mymx)
+ginvmymx
+
+#corr mat x precision mat
+mymxginv<-mymx%*%ginvmymx
+round(mymxginv,2)
+
+#precision mat x corr mat
+ginvmymx<-ginvmymx%*%mymx
+round(ginvmymx,2)
+```
+```{r}
+#my correlation matrix
+
+myvars<-data.frame(df$YearBuilt,df$OverallQual,df$SalePrice)
+mymx<-as.matrix(cor(myvars))
+mymx
+
+#inverse of my correlation matrix, precision matrix
+ginvmymx<-ginv(mymx)
+ginvmymx
+
+#Multiply corr mat by precision mat
+mymxginv<-mymx%*%ginvmymx
+round(mymxginv,2)
+
+```
+### Conduct LU decomposition on the matrix.
+```{r}
+
+library("Matrix")
+lu(mymx)
+```
+
+
+
+##Part 6: Calculus-Based Probability & Statistics
+
+*Calculus-Based Probability & Statistics.  Many times, it makes sense to fit a closed form distribution to data.*
+
+*For your first variable that is skewed to the right, shift it so that the minimum value is above zero.  Then load the MASS package and run fitdistr to fit an exponential probability density function.  (See  https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/fitdistr.html ).*
+
+*Minimum value is above zero*
+
+```{r sampling-1}
+#check that min val is not 0
+min(df$SalePrice)
+```
+
+*Run fitdistr to fit an exponential probability density function.*
+
+```{r sampling-2}
+fit <- fitdistr(df$SalePrice, "exponential")
+fit
+```
+
+*Find the optimal value of ?? for this distribution, and then take 1000 samples from this exponential distribution using this value (e.g., rexp(1000, ??)).*
+
+
+```{r sampling-3}
+#optimal value of ?? for this distribution
+
+lambda <- fit$estimate
+sampledf <- rexp(1000, lambda)
+lambda
+```
+
+*Plot a histogram and compare it with a histogram of your original variable.*
+
+```{r sampling-4}
+#Plot a histogram and compare it with a histogram of your original variable.
+
+sampledf<-data.frame(as.numeric(sampledf))
+colnames(sampledf)[1] <- "sample"
+str(sampledf)
+head(sampledf)
+hist(sampledf$sample, col="green", main="Histogram of Exponential Distribution", xlab = "SalePRice", breaks=30)
+```
+
+*Using the exponential pdf, find the 5th and 95th percentiles using the cumulative distribution function (CDF).* 
+
+```{r sampling-5}
+#find the 5th and 95th percentiles
+print("5th percentile")
+qexp(.05,rate = lambda)
+print("95th percentile")
+qexp(.95, rate = lambda)
+
+```
+
+*Also generate a 95% confidence interval from the empirical data, assuming normality.*
+
+```{r sampling-6}
+#95% confidence interval from the empirical data
+CI(df$SalePrice, 0.95)
+ 
+```
+
+*Finally, provide the empirical 5th percentile and 95th percentile of the data.  Discuss.*
+```{r sampling-7}
+quantile(df$SalePrice, .05)
+quantile(df$SalePrice, .95)
+```
+*With 95% confidence, the mean of SalePrice is between 184999.6 and 176842.8. The exponential distribution would not be a good fit in this case. We see that the center of the exponential distribution is shifted left as compared the empirical data. Additionally we see more spread in the exponential distribution.*
+
+
+##Part 7: Modeling
+
+*Modeling.  Build some type of regression  model and submit your model to the competition board.  Provide your complete model summary and results with analysis.  Report your Kaggle.com  user name and score.*
+
+#### Test Model 1: AIC in a Stepwise Algorithm
+
+```{r model1, eval=FALSE}
+#test of alternate model
+modvars <- df[, which(sapply(df, function(x) sum(is.na(x))) == 0)]
+model1 <- step(lm(df$SalePrice ~ ., modvars), direction = 'backward', trace = FALSE)
+model1
+
+#dfglm <- glm(df$SalePrice ~ ., family=binomial, data = df)
+#dfstep <- stepAIC(dfglm, trace = FALSE)
+#dfstep$anova
+```
+
+#### Test Model 2: Multiple Linear Regression
+
+```{r model2}
+fit <- lm(df$SalePrice ~ df$OverallQual + df$GrLivArea + df$GarageCars + df$GarageArea, data=df)
+summary(fit) # show results
+```
+
+Using intercepts from regression summary, create multiple linear regression model.
+
+$$ SalePrice = 26988.854*OverallQual + 49.573*GrLivArea +  11317.522*GarageCars + 41.478*GarageArea -98436.050 $$
+
+```{r modelplots}
+
+par(mfrow=c(2,2))
+X1<-df$OverallQual
+X2<-df$GrLivArea
+X3<-df$GarageCars
+X4<-df$GarageArea
+Y<-df$SalePrice
+
+plot(X1,Y, col="#f06292", main="OverallQual", ylab="Sale Price")
+abline(lm(Y~X1), col="yellow", lwd=3) # regression line (y~x)
+
+plot(X2,Y, col="#9c27b0", main="GrLivArea", ylab="Sale Price")
+abline(lm(Y~X2), col="yellow", lwd=3) # regression line (y~x)
+
+plot(X3,Y, col="#ce93d8", main="GarageCars", ylab="Sale Price")
+abline(lm(Y~X3), col="yellow", lwd=3) # regression line (y~x)
+
+plot(X4,Y, col="#c2185b", main="GarageArea", ylab="Sale Price")
+abline(lm(Y~X4), col="yellow", lwd=3) # regression line (y~x)
+
+```
+
+Load test data set and create calculated column using equation for multiple linear regression. Select required columns and export to csv for contest entry.
+
+```{r load-testdata}
+dftest <- read.csv("https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA605/W15/FinalExam/test.csv")
+#str(dftest)
+#nrow(dftest)
+
+SalePrice<-((26988.854*df$OverallQual) + (49.573*df$GrLivArea) +  (11317.522*df$GarageCars) + (41.478*df$GarageArea) -98436.050)
+#head(SalePrice)
+
+dftest<-dftest[,c("Id","OverallQual","GrLivArea","GarageCars","GarageArea")]
+
+kable(head(dftest))
+#tail(dftest)
+
+submission <- cbind(dftest$Id,SalePrice)
+colnames(submission)[1] <- "Id"
+submission[submission<0] <- median(SalePrice) #clear negatives due to missing values
+submission<-as.data.frame(submission[1:1459,])
+kable(head(submission))
+#str(submission)
+#dim(submission)
+
+```
+
+#### Export CSV and submit to Kaggle.
+
+Eval set to FALSE for reader convenience.
+
+```{r exportcsv, eval=FALSE}
+write.csv(submission, file = "matstest.csv", quote=FALSE, row.names=FALSE)
+```
+Kaggle UserName: mathsanu71
+Kaggle score: 0.60113
+
+<center><img src="https://raw.githubusercontent.com/mathsanu/CUNY_MSDA/master/DATA605/W15/FinalExam/kaggle.png"></center>
